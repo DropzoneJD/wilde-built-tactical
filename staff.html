@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Staff &amp; Range — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/css/tactical.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    /* staff page layout tweaks */
+    .sched-table th, .sched-table td { padding: 9px 10px; font-size: 12.5px; }
+    .shift-block {
+      display: inline-block; font-family: var(--f-mono); font-size: 10.5px;
+      padding: 2px 7px; border-radius: 2px; letter-spacing: .04em;
+    }
+    .shift-open  { background: rgba(107,125,74,.25); color: var(--od-bright); border: 1px solid rgba(138,161,92,.3); }
+    .shift-close { background: rgba(77,126,163,.18); color: var(--tac-blue);  border: 1px solid rgba(77,126,163,.3); }
+    .shift-off   { background: transparent; color: var(--faint); border: 1px solid var(--line); }
+    .shift-double{ background: rgba(255,180,58,.15); color: var(--amber);     border: 1px solid rgba(255,180,58,.3); }
+    .cert-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+    .cert-row:last-child { border-bottom: 0; }
+    .cert-holders { display: flex; gap: 5px; flex-wrap: wrap; }
+    .cert-name { font-weight: 600; font-size: 13px; min-width: 150px; }
+    .spark-wrap { display: inline-block; vertical-align: middle; }
+    @media (max-width: 900px) { .hide-sm { display: none !important; } }
+  </style>
+</head>
+<body data-page="staff">
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <div class="content content--wide fade-in">
+
+        <!-- PAGE HEAD -->
+        <div class="page-head">
+          <div>
+            <div class="stencil">Team · Certifications · Performance</div>
+            <h1>Staff &amp; Range</h1>
+            <div class="meta-row mt-8">
+              <span><span class="sdot sdot--go"></span> LIVE</span><span class="sep">/</span>
+              <span id="staffClock">--:-- PST</span><span class="sep">/</span>
+              <span id="onCount">-- ON SHIFT</span><span class="sep">/</span>
+              <span>2 LOCATIONS</span>
+            </div>
+          </div>
+          <div class="flex gap-8 items-center wrap">
+            <div class="seg" id="locSeg">
+              <button data-loc="all" class="is-active">All</button>
+              <button data-loc="San Diego">San Diego</button>
+              <button data-loc="Escondido">Escondido</button>
+            </div>
+            <button class="btn" onclick="WBT.ui.toast('Shift report exported (demo)','file-down')"><i data-lucide="file-down"></i> Export</button>
+            <button class="btn btn--primary" onclick="openAddStaff()"><i data-lucide="user-plus"></i> Add Staff</button>
+          </div>
+        </div>
+
+        <!-- KPI ROW -->
+        <div class="grid mb-24" id="staffKpiRow" style="grid-template-columns:repeat(6,1fr)"></div>
+
+        <!-- MAIN GRID -->
+        <div class="grid grid-12">
+
+          <!-- STAFF ROSTER TABLE col-12 -->
+          <div class="panel bracketed col-12">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="users" style="width:14px;height:14px"></i> Staff Roster</span>
+              <div class="right">
+                <div class="search" style="width:200px">
+                  <i data-lucide="search"></i>
+                  <input class="input" id="rosterSearch" placeholder="Search name or role…" oninput="filterRoster(this.value)">
+                </div>
+                <button class="btn btn--sm btn--ghost" onclick="WBT.ui.toast('Schedule view toggled (demo)','calendar')"><i data-lucide="calendar"></i> Schedule</button>
+              </div>
+            </div>
+            <div class="panel__body--flush">
+              <div class="table-wrap">
+                <table class="tac-table" id="rosterTable"></table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SALES LEADERBOARD col-5 -->
+          <div class="panel col-5">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="bar-chart-horizontal" style="width:14px;height:14px"></i> Sales Leaderboard · MTD</span>
+              <div class="right"><span class="tag tag--fde tag--ghost">Excl. Owner</span></div>
+            </div>
+            <div class="panel__body">
+              <div class="chart-box" style="height:220px"><canvas id="leaderChart"></canvas></div>
+            </div>
+          </div>
+
+          <!-- CERTIFICATIONS TRACKER col-4 -->
+          <div class="panel col-4">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="award" style="width:14px;height:14px"></i> Certifications Tracker</span>
+              <div class="right">
+                <span class="tag tag--success"><span class="dot"></span>All Current</span>
+              </div>
+            </div>
+            <div class="panel__body" id="certsPanel"></div>
+          </div>
+
+          <!-- PERFORMANCE METRICS col-3 -->
+          <div class="panel col-3">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="activity" style="width:14px;height:14px"></i> Performance</span>
+            </div>
+            <div class="panel__body" id="perfPanel"></div>
+          </div>
+
+          <!-- WEEKLY SCHEDULE col-12 -->
+          <div class="panel col-12">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="calendar-days" style="width:14px;height:14px"></i> Weekly Schedule</span>
+              <div class="right">
+                <span class="tag tag--ghost tag--fde">Week of <span id="weekLabel">—</span></span>
+                <button class="btn btn--sm" onclick="WBT.ui.toast('Schedule editor opened (demo)','pencil')"><i data-lucide="pencil"></i> Edit</button>
+              </div>
+            </div>
+            <div class="panel__body--flush">
+              <div class="table-wrap">
+                <table class="tac-table sched-table" id="schedTable"></table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/staff.js"></script>
+</body>
+</html>

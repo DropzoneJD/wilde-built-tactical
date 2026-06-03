@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Command Center — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/css/tactical.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    .hide-sm{}@media(max-width:900px){.hide-sm{display:none!important;}}
+    .brief-line{display:flex;gap:11px;padding:11px 0;border-bottom:1px dashed var(--line);align-items:flex-start}
+    .brief-line:last-child{border-bottom:0}
+    .brief-line i{width:17px;height:17px;flex:0 0 auto;margin-top:2px}
+    .mini-stat{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px dashed var(--line)}
+    .mini-stat:last-child{border-bottom:0}
+  </style>
+</head>
+<body data-page="dashboard">
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <div class="content content--wide fade-in">
+
+        <!-- page head -->
+        <div class="page-head">
+          <div>
+            <div class="stencil">Operations Overview</div>
+            <h1>Command Center</h1>
+            <div class="meta-row mt-8">
+              <span><span class="sdot sdot--go"></span> LIVE</span><span class="sep">/</span>
+              <span id="clock">--:--:-- PST</span><span class="sep">/</span>
+              <span>2 STOREFRONTS · SD + ESC</span>
+            </div>
+          </div>
+          <div class="flex gap-8 items-center wrap">
+            <div class="seg" id="rangeSeg">
+              <button data-r="7">7D</button><button data-r="30" class="is-active">30D</button>
+              <button data-r="90">90D</button><button data-r="ytd">YTD</button>
+            </div>
+            <button class="btn" onclick="WBT.ui.toast('Exported snapshot.pdf (demo)','file-down')"><i data-lucide="file-down"></i> Export</button>
+            <button class="btn btn--primary" onclick="WBT.ui.toast('Opening new sale ticket (demo)','plus')"><i data-lucide="plus"></i> New Sale</button>
+          </div>
+        </div>
+
+        <!-- KPI ROW -->
+        <div class="grid grid-12 mb-24" id="kpiRow"></div>
+
+        <!-- MAIN GRID -->
+        <div class="grid grid-12">
+
+          <!-- revenue trend -->
+          <div class="panel bracketed col-8">
+            <div class="panel__head">
+              <span class="stencil">Revenue · In-Store vs Online</span>
+              <div class="right">
+                <span class="tag tag--fde"><span class="dot"></span>In-Store</span>
+                <span class="tag tag--blue"><span class="dot"></span>Online</span>
+              </div>
+            </div>
+            <div class="panel__body"><div class="chart-box" style="height:280px"><canvas id="revChart"></canvas></div></div>
+          </div>
+
+          <!-- channel donut -->
+          <div class="panel col-4">
+            <div class="panel__head"><span class="stencil">Channel Mix · MTD</span></div>
+            <div class="panel__body"><div class="chart-box" style="height:280px"><canvas id="channelChart"></canvas></div></div>
+          </div>
+
+          <!-- category bars -->
+          <div class="panel col-5">
+            <div class="panel__head"><span class="stencil">Revenue by Category</span></div>
+            <div class="panel__body"><div class="chart-box" style="height:240px"><canvas id="catChart"></canvas></div></div>
+          </div>
+
+          <!-- AI daily briefing -->
+          <div class="panel col-4" style="background:linear-gradient(160deg,rgba(107,125,74,.10),var(--panel-solid))">
+            <div class="panel__head"><span class="stencil"><i data-lucide="brain-circuit" style="width:14px;height:14px"></i> AI Daily Briefing</span>
+              <div class="right"><span class="tag tag--od tag--ghost">06:00 PST</span></div></div>
+            <div class="panel__body" id="briefing"></div>
+          </div>
+
+          <!-- restock alerts -->
+          <div class="panel col-3">
+            <div class="panel__head"><span class="stencil">Restock Alerts</span>
+              <div class="right"><a href="inventory.html" class="tiny mono" style="color:var(--fde)">ARMORY →</a></div></div>
+            <div class="panel__body" id="restock" style="padding-top:8px"></div>
+          </div>
+
+          <!-- recent orders -->
+          <div class="panel col-8">
+            <div class="panel__head"><span class="stencil">Live Order Feed</span>
+              <div class="right"><a href="orders.html" class="tiny mono" style="color:var(--fde)">ALL ORDERS →</a></div></div>
+            <div class="panel__body panel__body--flush">
+              <div class="table-wrap"><table class="tac-table" id="ordersTable"></table></div>
+            </div>
+          </div>
+
+          <!-- compliance + carts stack -->
+          <div class="col-4 grid" style="gap:var(--gap)">
+            <div class="panel">
+              <div class="panel__head"><span class="stencil"><i data-lucide="shield-check" style="width:14px;height:14px"></i> CA Compliance</span>
+                <div class="right"><a href="compliance.html" class="tiny mono" style="color:var(--fde)">CENTER →</a></div></div>
+              <div class="panel__body" id="compliance"></div>
+            </div>
+            <div class="panel">
+              <div class="panel__head"><span class="stencil"><i data-lucide="shopping-cart" style="width:14px;height:14px"></i> Cart Recovery</span>
+                <div class="right"><a href="carts.html" class="tiny mono" style="color:var(--fde)">ENGINE →</a></div></div>
+              <div class="panel__body" id="carts"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/dashboard.js"></script>
+</body>
+</html>

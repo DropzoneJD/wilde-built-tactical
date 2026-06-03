@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sales &amp; Orders — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/css/tactical.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    .orders-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:12px 18px; border-bottom:1px solid var(--line); background:var(--bg-2); }
+    .orders-toolbar .search { flex: 1 1 220px; max-width:300px; }
+    .status-filter-bar { display:flex; gap:6px; flex-wrap:wrap; }
+    .status-filter-bar button { font-family:var(--f-tac); font-size:10.5px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; padding:4px 10px; border-radius:3px; border:1px solid var(--line-2); background:var(--panel-2); color:var(--muted); cursor:pointer; transition:all .12s; white-space:nowrap; }
+    .status-filter-bar button.is-active, .status-filter-bar button:hover { color:var(--text); border-color:var(--fde); background:rgba(194,161,123,.12); }
+    .funnel-row { display:flex; flex-direction:column; gap:10px; }
+    .funnel-item { display:flex; flex-direction:column; gap:5px; }
+    .funnel-label { display:flex; justify-content:space-between; align-items:center; font-size:12px; }
+    .funnel-label span { font-family:var(--f-mono); font-weight:600; }
+    .needs-action-item { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 0; border-bottom:1px dashed var(--line); }
+    .needs-action-item:last-child { border-bottom:0; }
+    .no-results { padding:32px; text-align:center; color:var(--faint); font-family:var(--f-tac); font-size:12px; letter-spacing:.1em; text-transform:uppercase; }
+    @media(max-width:1180px){ .orders-sidebar{ grid-column:1/-1 !important; } }
+  </style>
+</head>
+<body data-page="orders">
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <div class="content content--wide fade-in">
+
+        <!-- PAGE HEAD -->
+        <div class="page-head">
+          <div>
+            <div class="stencil">Omnichannel Order Pipeline</div>
+            <h1>Sales &amp; Orders</h1>
+            <div class="meta-row mt-8">
+              <span><span class="sdot sdot--go"></span> LIVE</span><span class="sep">/</span>
+              <span id="orderClock">--:--:-- PST</span><span class="sep">/</span>
+              <span id="ordersMetaCount">-- ORDERS MTD</span><span class="sep">/</span>
+              <span>ONLINE + IN-STORE · 2 LOCATIONS</span>
+            </div>
+          </div>
+          <div class="flex gap-8 items-center wrap">
+            <button class="btn" onclick="WBT.ui.toast('Exporting orders CSV (demo)','file-down')"><i data-lucide="file-down"></i> Export</button>
+            <button class="btn btn--amber" onclick="WBT.ui.toast('Opening new sale ticket (demo)','plus-circle')"><i data-lucide="plus-circle"></i> New Order</button>
+            <button class="btn btn--primary" onclick="WBT.ui.toast('Opening POS terminal (demo)','scan-line')"><i data-lucide="scan-line"></i> POS Terminal</button>
+          </div>
+        </div>
+
+        <!-- KPI ROW -->
+        <div class="grid mb-24" id="ordersKpiRow" style="grid-template-columns:repeat(6,1fr)"></div>
+
+        <!-- MAIN GRID -->
+        <div class="grid grid-12">
+
+          <!-- ORDERS TABLE — col-8 -->
+          <div class="panel bracketed col-8">
+            <div class="orders-toolbar">
+              <div class="search">
+                <i data-lucide="search"></i>
+                <input class="input" id="orderSearch" placeholder="Search order # or customer…" oninput="window.ordersPage.filter()">
+              </div>
+              <div class="seg" id="channelSeg">
+                <button data-ch="all" class="is-active" onclick="window.ordersPage.setChannel('all',this)">All</button>
+                <button data-ch="online" onclick="window.ordersPage.setChannel('online',this)">Online</button>
+                <button data-ch="instore" onclick="window.ordersPage.setChannel('instore',this)">In-Store</button>
+              </div>
+              <div class="status-filter-bar" id="statusFilterBar"></div>
+            </div>
+            <div class="panel__body--flush">
+              <div class="table-wrap" style="max-height:520px;overflow-y:auto">
+                <table class="tac-table" id="ordersTable">
+                  <thead>
+                    <tr>
+                      <th>Order #</th>
+                      <th>Customer</th>
+                      <th>Channel</th>
+                      <th class="num">Items</th>
+                      <th class="num">Total</th>
+                      <th>Status</th>
+                      <th>Placed</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ordersBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SIDEBAR — col-4 -->
+          <div class="col-4 grid orders-sidebar" style="gap:var(--gap);align-content:start">
+
+            <!-- Status Funnel -->
+            <div class="panel">
+              <div class="panel__head">
+                <span class="stencil"><i data-lucide="filter" style="width:13px;height:13px"></i> Order Status Funnel</span>
+              </div>
+              <div class="panel__body" id="statusFunnel"></div>
+            </div>
+
+            <!-- 14-day Revenue Chart -->
+            <div class="panel bracketed">
+              <div class="panel__head">
+                <span class="stencil">Revenue · 14-Day Trend</span>
+                <div class="right"><span class="tag tag--od tag--ghost" id="rev14Label">—</span></div>
+              </div>
+              <div class="panel__body">
+                <div class="chart-box" style="height:140px"><canvas id="rev14Chart"></canvas></div>
+              </div>
+            </div>
+
+            <!-- Needs Action -->
+            <div class="panel">
+              <div class="panel__head">
+                <span class="stencil"><i data-lucide="alert-triangle" style="width:13px;height:13px"></i> Needs Action</span>
+                <div class="right"><span class="tag tag--danger" id="needsActionCount">0</span></div>
+              </div>
+              <div class="panel__body panel__body--flush" id="needsActionList" style="padding:0 18px"></div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/orders.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+.vscode/
+.idea/
+*~
+
+# local preview helper (kept out of the public repo)
+.claude/
+
+# scratch
+/tmp/
+*.tmp

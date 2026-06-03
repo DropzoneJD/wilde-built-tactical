@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reports — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/css/tactical.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    .rpt-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:14px 18px; border-bottom:1px solid var(--line); background:var(--bg-2); }
+    .rpt-toolbar label.fld { margin:0; display:flex; align-items:center; gap:8px; font-family:var(--f-tac); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+    .rpt-toolbar select.input { padding:6px 10px; font-size:12px; height:32px; min-width:130px; }
+    .rpt-divider { width:1px; height:24px; background:var(--line); margin:0 4px; }
+    .pl-row td { border-bottom:1px solid var(--line); }
+    .pl-row--total td { border-top:2px solid var(--fde); border-bottom:2px solid var(--fde); background:rgba(194,161,123,.07); font-weight:700; }
+    .pl-row--section td { background:var(--bg-2); font-family:var(--f-tac); font-size:10.5px; letter-spacing:.15em; text-transform:uppercase; color:var(--fde); padding:10px 16px 5px; }
+    .chart-box { position:relative; }
+    .insight-chip { display:flex; align-items:flex-start; gap:10px; padding:11px 0; border-bottom:1px dashed var(--line); }
+    .insight-chip:last-child { border-bottom:0; }
+    .insight-chip i { width:16px; height:16px; flex:0 0 auto; margin-top:2px; }
+    .loc-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+    .loc-bar-row:last-child { margin-bottom:0; }
+    .loc-bar-label { font-family:var(--f-tac); font-size:11px; letter-spacing:.08em; text-transform:uppercase; width:90px; color:var(--text-soft); flex:0 0 auto; }
+    .loc-bar-track { flex:1; height:20px; background:var(--panel-2); border-radius:2px; overflow:hidden; display:flex; }
+    .loc-bar-fill { height:100%; border-radius:2px 0 0 2px; }
+    .loc-bar-val { font-family:var(--f-mono); font-size:12px; width:68px; text-align:right; flex:0 0 auto; color:var(--text-soft); }
+  </style>
+</head>
+<body data-page="reports">
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <div class="content content--wide fade-in">
+
+        <!-- PAGE HEAD -->
+        <div class="page-head">
+          <div>
+            <div class="stencil">Analytics Deep-Dive</div>
+            <h1>Reports</h1>
+            <div class="meta-row mt-8">
+              <span><span class="sdot sdot--go"></span> LIVE</span><span class="sep">/</span>
+              <span id="rptClock">--:--:-- PST</span><span class="sep">/</span>
+              <span>2 STOREFRONTS · SD + ESC</span><span class="sep">/</span>
+              <span class="tag tag--od tag--ghost" style="padding:1px 6px">DATA CURRENT</span>
+            </div>
+          </div>
+          <div class="flex gap-8 items-center wrap">
+            <div class="seg" id="rangeSeg">
+              <button data-r="7">7D</button>
+              <button data-r="30" class="is-active">30D</button>
+              <button data-r="90">90D</button>
+              <button data-r="ytd">YTD</button>
+            </div>
+            <button class="btn" id="btnExportCSV"><i data-lucide="download"></i> Export CSV</button>
+            <button class="btn btn--primary" id="btnExportPDF"><i data-lucide="file-down"></i> Export PDF</button>
+          </div>
+        </div>
+
+        <!-- KPI STRIP -->
+        <div class="grid grid-12 mb-24" id="kpiStrip" style="grid-template-columns:repeat(6,1fr)"></div>
+
+        <!-- BUILD REPORT TOOLBAR -->
+        <div class="panel col-12 mb-24">
+          <div class="rpt-toolbar">
+            <span class="stencil"><i data-lucide="sliders-horizontal" style="width:13px;height:13px"></i> Build Report</span>
+            <div class="rpt-divider"></div>
+            <label class="fld"><i data-lucide="calendar-range" style="width:14px;height:14px;color:var(--fde)"></i> Date Range
+              <select class="input" id="toolRange">
+                <option value="7">Last 7 Days</option>
+                <option value="30" selected>Last 30 Days</option>
+                <option value="90">Last 90 Days</option>
+                <option value="180">Last 6 Months</option>
+              </select>
+            </label>
+            <label class="fld"><i data-lucide="bar-chart-2" style="width:14px;height:14px;color:var(--fde)"></i> Metric
+              <select class="input" id="toolMetric">
+                <option value="revenue">Revenue</option>
+                <option value="orders">Orders</option>
+                <option value="traffic">Traffic</option>
+                <option value="aov">Avg Order Value</option>
+              </select>
+            </label>
+            <label class="fld"><i data-lucide="layers" style="width:14px;height:14px;color:var(--fde)"></i> Group By
+              <select class="input" id="toolGroup">
+                <option value="day">Day</option>
+                <option value="week">Week</option>
+                <option value="month">Month</option>
+                <option value="channel">Channel</option>
+              </select>
+            </label>
+            <div class="rpt-divider"></div>
+            <button class="btn btn--amber btn--sm" id="btnApply"><i data-lucide="refresh-cw"></i> Apply</button>
+            <div class="rpt-divider"></div>
+            <span class="tiny mono muted" id="rptStatus">Showing: Revenue · Last 30 Days · By Day</span>
+          </div>
+        </div>
+
+        <!-- MAIN CHART ROW -->
+        <div class="grid grid-12 mb-24">
+
+          <!-- 90-day Revenue Line -->
+          <div class="panel bracketed col-8">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="trending-up" style="width:13px;height:13px"></i> Revenue Trend</span>
+              <div class="right">
+                <span class="tag tag--fde"><span class="dot"></span> In-Store</span>
+                <span class="tag tag--blue"><span class="dot"></span> Online</span>
+                <span class="tag tag--od"><span class="dot"></span> Phone</span>
+                <span class="tag tag--steel tag--ghost" id="revRangeLabel">90D</span>
+              </div>
+            </div>
+            <div class="panel__body">
+              <div class="chart-box" style="height:300px"><canvas id="revTrendChart"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Channel Mix Donut -->
+          <div class="panel col-4">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="pie-chart" style="width:13px;height:13px"></i> Channel Mix</span>
+              <div class="right"><span class="tag tag--ghost tag--steel">MTD</span></div>
+            </div>
+            <div class="panel__body">
+              <div class="chart-box" style="height:220px"><canvas id="channelDonut"></canvas></div>
+              <div id="channelLegend" class="mt-16"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- SECONDARY CHARTS ROW -->
+        <div class="grid grid-12 mb-24">
+
+          <!-- Revenue by Category horizontal bars -->
+          <div class="panel col-6">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="layout-list" style="width:13px;height:13px"></i> Revenue by Category</span>
+              <div class="right">
+                <button class="btn btn--ghost btn--sm" onclick="WBT.ui.toast('Drill-down by category (demo)','zoom-in')"><i data-lucide="zoom-in"></i> Drill</button>
+              </div>
+            </div>
+            <div class="panel__body">
+              <div class="chart-box" style="height:260px"><canvas id="catBarsChart"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Sales by Location -->
+          <div class="panel col-6">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="map-pin" style="width:13px;height:13px"></i> Revenue by Location</span>
+              <div class="right">
+                <span class="tag tag--fde">SD</span>
+                <span class="tag tag--od">ESC</span>
+              </div>
+            </div>
+            <div class="panel__body" id="locPanel">
+              <div class="chart-box" style="height:220px"><canvas id="locChart"></canvas></div>
+              <div id="locBars" class="mt-20"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- MARGIN ROW + INSIGHTS -->
+        <div class="grid grid-12 mb-24">
+
+          <!-- Margin by Category -->
+          <div class="panel col-7">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="percent" style="width:13px;height:13px"></i> Gross Margin % by Category</span>
+              <div class="right">
+                <span class="tag tag--success">Above 35%</span>
+                <span class="tag tag--amber">20–35%</span>
+                <span class="tag tag--danger">Below 20%</span>
+              </div>
+            </div>
+            <div class="panel__body">
+              <div class="chart-box" style="height:240px"><canvas id="marginChart"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Analytics Insights -->
+          <div class="panel col-5" style="background:linear-gradient(160deg,rgba(194,161,123,.07),var(--panel-solid))">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="lightbulb" style="width:13px;height:13px"></i> Key Insights</span>
+              <div class="right"><span class="tag tag--fde tag--ghost">AI-Assisted</span></div>
+            </div>
+            <div class="panel__body" id="insightsBody"></div>
+          </div>
+
+        </div>
+
+        <!-- P&L SUMMARY TABLE -->
+        <div class="panel col-12">
+          <div class="panel__head">
+            <span class="stencil"><i data-lucide="table-2" style="width:13px;height:13px"></i> P&amp;L Summary — Revenue, COGS &amp; Gross Profit</span>
+            <div class="right">
+              <span class="tag tag--ghost tag--steel tiny">Trailing 3 Months</span>
+              <button class="btn btn--sm" onclick="WBT.ui.toast('P&L exported to spreadsheet (demo)','table-2')"><i data-lucide="download"></i> Export</button>
+            </div>
+          </div>
+          <div class="panel__body panel__body--flush">
+            <div class="table-wrap">
+              <table class="tac-table" id="plTable"></table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/reports.js"></script>
+</body>
+</html>

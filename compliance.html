@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CA Compliance Center — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/css/tactical.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    /* page-scoped layout-only tweaks (prefer existing classes) */
+    .hide-sm{}@media(max-width:900px){.hide-sm{display:none!important;}}
+    /* DROS 10-day clock card */
+    .dros-card{display:grid;grid-template-columns:62px 1fr auto;gap:14px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+    .dros-card:last-child{border-bottom:0}
+    .dros-card.is-hold{background:rgba(224,73,47,.05)}
+    .dros-day{width:62px;height:62px;border-radius:4px;border:1px solid var(--line-2);background:var(--bg-2);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;flex:0 0 auto}
+    .dros-day b{font-family:var(--f-display);font-weight:800;font-size:26px;letter-spacing:.5px}
+    .dros-day small{font-family:var(--f-mono);font-size:8.5px;letter-spacing:1px;color:var(--faint);margin-top:2px}
+    .dros-mid{min-width:0}
+    /* official ledger seal / header */
+    .doj-seal{width:46px;height:46px;border-radius:50%;border:2px solid var(--fde);display:grid;place-items:center;color:var(--fde);background:var(--fde-glow);box-shadow:inset 0 0 14px rgba(194,161,123,.18);flex:0 0 auto}
+    /* compliance gauge big readout */
+    .gauge-num{font-family:var(--f-display);font-weight:800;font-size:52px;line-height:.9;letter-spacing:.5px;color:var(--success)}
+    /* roster verdict box */
+    .verdict{display:flex;align-items:center;gap:14px;padding:16px;border-radius:var(--r-lg);border:1px solid var(--line-2);background:var(--panel-2)}
+    .verdict.is-ok{border-color:rgba(95,181,95,.4);background:rgba(95,181,95,.08)}
+    .verdict.is-no{border-color:rgba(224,73,47,.45);background:rgba(224,73,47,.08)}
+    .verdict-icon{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto}
+    .verdict.is-ok .verdict-icon{background:rgba(95,181,95,.16);color:var(--success)}
+    .verdict.is-no .verdict-icon{background:rgba(224,73,47,.16);color:var(--danger)}
+    .verdict-icon svg{width:28px;height:28px}
+    .ledger-line{font-family:var(--f-mono);font-size:11px;color:var(--steel)}
+    /* tab section show/hide */
+    .tabsec{display:none}
+    .tabsec.is-on{display:block;animation:fade .3s ease both}
+  </style>
+</head>
+<body data-page="compliance">
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <div class="content content--wide fade-in">
+
+        <!-- page head -->
+        <div class="page-head">
+          <div>
+            <div class="stencil">DROS · 10-Day Clock · DOJ Roster · A&amp;D Bound Book</div>
+            <h1>CA Compliance Center</h1>
+            <div class="meta-row mt-8">
+              <span><span class="sdot sdot--go"></span> FFL 01 · ACTIVE</span><span class="sep">/</span>
+              <span id="clock">--:--:-- PST</span><span class="sep">/</span>
+              <span>DOJ DES · SYNCED</span><span class="sep">/</span>
+              <span>27 CFR 478.125 COMPLIANT</span>
+            </div>
+          </div>
+          <div class="flex gap-8 items-center wrap">
+            <button class="btn" onclick="WBT.ui.toast('DOJ DES status re-synced (demo)','refresh-cw')"><i data-lucide="refresh-cw"></i> Sync DOJ</button>
+            <button class="btn btn--primary" onclick="WBT.ui.toast('Compliance packet exported — compliance_audit.pdf (demo)','file-down')"><i data-lucide="file-down"></i> Export Audit</button>
+          </div>
+        </div>
+
+        <!-- KPI ROW (6 stat) -->
+        <div class="grid grid-12 mb-24" id="kpiRow"></div>
+
+        <!-- HERO: compliance score gauge + alerts -->
+        <div class="grid grid-12 mb-24">
+          <div class="panel bracketed col-8" style="background:linear-gradient(160deg,rgba(95,181,95,.07),var(--panel-solid))">
+            <div class="panel__head">
+              <span class="doj-seal"><i data-lucide="shield-check" style="width:24px;height:24px"></i></span>
+              <div>
+                <span class="stencil">Overall Compliance Posture</span>
+                <div class="tiny mono muted mt-8">CA PENAL CODE · 11 CCR · ATF 27 CFR 478 — AGGREGATE SCORE</div>
+              </div>
+              <div class="right"><span class="tag tag--success"><span class="dot"></span>AUDIT-READY</span></div>
+            </div>
+            <div class="panel__body" id="scoreBoard"></div>
+          </div>
+          <div class="panel col-4">
+            <div class="panel__head"><span class="stencil"><i data-lucide="bell-ring" style="width:14px;height:14px"></i> Action Required</span></div>
+            <div class="panel__body" id="actionFeed" style="display:flex;flex-direction:column;gap:10px"></div>
+          </div>
+        </div>
+
+        <!-- TAB BAR -->
+        <div class="flex items-center justify-between wrap gap-12 mb-16">
+          <div class="seg" id="tabSeg">
+            <button data-tab="dros" class="is-active"><i data-lucide="timer" style="width:14px;height:14px;margin-right:6px"></i>DROS Pipeline</button>
+            <button data-tab="roster"><i data-lucide="list-checks" style="width:14px;height:14px;margin-right:6px"></i>DOJ Roster Check</button>
+            <button data-tab="book"><i data-lucide="book-lock" style="width:14px;height:14px;margin-right:6px"></i>A&amp;D Bound Book</button>
+          </div>
+          <div class="meta-row" id="tabMeta"></div>
+        </div>
+
+        <!-- ============ TAB 1: DROS PIPELINE ============ -->
+        <section class="tabsec is-on" id="sec-dros">
+          <div id="drosAlerts" class="mb-16"></div>
+          <div class="grid grid-12">
+            <div class="panel bracketed col-8">
+              <div class="panel__head">
+                <span class="stencil"><i data-lucide="timer" style="width:14px;height:14px"></i> 10-Day Waiting Period Clock</span>
+                <div class="right">
+                  <div class="seg" id="drosFilter">
+                    <button data-f="all" class="is-active">ALL</button>
+                    <button data-f="ready">READY</button>
+                    <button data-f="waiting">WAITING</button>
+                    <button data-f="flag">FLAGGED</button>
+                  </div>
+                </div>
+              </div>
+              <div class="panel__body panel__body--flush" id="drosBoard"></div>
+            </div>
+            <div class="col-4 grid" style="gap:var(--gap)">
+              <div class="panel">
+                <div class="panel__head"><span class="stencil">Pipeline Throughput</span></div>
+                <div class="panel__body"><div class="chart-box" style="height:170px"><canvas id="drosChart"></canvas></div></div>
+              </div>
+              <div class="panel">
+                <div class="panel__head"><span class="stencil"><i data-lucide="info" style="width:14px;height:14px"></i> Statutory Notes</span></div>
+                <div class="panel__body" id="drosNotes"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ TAB 2: DOJ ROSTER CHECK ============ -->
+        <section class="tabsec" id="sec-roster">
+          <div class="grid grid-12">
+            <div class="panel bracketed col-7">
+              <div class="panel__head"><span class="stencil"><i data-lucide="search-check" style="width:14px;height:14px"></i> Handgun Roster Lookup</span>
+                <div class="right"><span class="tag tag--steel">CA DOJ CERTIFIED LIST</span></div>
+              </div>
+              <div class="panel__body">
+                <label class="fld" for="rosterSelect">Select Handgun to Verify</label>
+                <select class="input" id="rosterSelect"></select>
+                <div id="rosterVerdict" class="mt-16"></div>
+              </div>
+            </div>
+            <div class="panel col-5">
+              <div class="panel__head"><span class="stencil"><i data-lucide="list-checks" style="width:14px;height:14px"></i> Featureless Rifle Compliance</span>
+                <div class="right"><span class="tag tag--od tag--ghost">11 CCR § 5471</span></div>
+              </div>
+              <div class="panel__body" id="featureless"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ TAB 3: A&D BOUND BOOK ============ -->
+        <section class="tabsec" id="sec-book">
+          <div class="panel bracketed">
+            <div class="panel__head">
+              <span class="doj-seal" style="width:38px;height:38px"><i data-lucide="book-lock" style="width:20px;height:20px"></i></span>
+              <div>
+                <span class="stencil">ATF Acquisition &amp; Disposition Record</span>
+                <div class="tiny mono muted mt-8">FORM 27 CFR 478.125 — PERMANENT BOUND RECORD · FFL 01 · WILDE BUILT TACTICAL</div>
+              </div>
+              <div class="right">
+                <button class="btn btn--sm" onclick="WBT.ui.toast('Reconciled 1,420 lines — 0 discrepancies (demo)','check-check')"><i data-lucide="scale"></i> Reconcile</button>
+                <button class="btn btn--sm btn--primary" onclick="WBT.ui.toast('4473 cross-audit exported — book_audit.pdf (demo)','file-down')"><i data-lucide="file-down"></i> Export 4473 Audit</button>
+              </div>
+            </div>
+            <div class="flex items-center gap-12 wrap" style="padding:12px 18px;border-bottom:1px solid var(--line)">
+              <div class="search hide-sm" style="width:280px">
+                <i data-lucide="search"></i>
+                <input class="input" id="bookSearch" placeholder="Filter by serial, mfg, model, party…">
+              </div>
+              <div class="seg" id="bookFilter">
+                <button data-f="all" class="is-active">ALL</button>
+                <button data-f="Acquisition">ACQ</button>
+                <button data-f="Disposition">DISP</button>
+              </div>
+              <div class="meta-row" id="bookMeta" style="margin-left:auto"></div>
+            </div>
+            <div class="panel__body panel__body--flush">
+              <div class="table-wrap"><table class="tac-table" id="bookTable"></table></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/compliance.js"></script>
+</body>
+</html>

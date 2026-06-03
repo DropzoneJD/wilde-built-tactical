@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/css/tactical.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    /* settings vertical nav */
+    .settings-layout { display: grid; grid-template-columns: 210px 1fr; gap: var(--gap); align-items: start; }
+    .settings-nav { position: sticky; top: calc(var(--topbar-h) + 24px); }
+    .settings-nav__item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px; border-radius: var(--r); cursor: pointer;
+      font-family: var(--f-tac); font-size: 12px; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text-soft);
+      border: 1px solid transparent; transition: all .12s;
+    }
+    .settings-nav__item:hover { background: var(--panel-2); color: var(--text); }
+    .settings-nav__item.is-active {
+      background: linear-gradient(90deg, rgba(194,161,123,.16), rgba(194,161,123,.02));
+      color: var(--text); border-color: rgba(194,161,123,.35);
+    }
+    .settings-nav__item.is-active::before {
+      content:""; position:absolute; left:0; top:50%; transform:translateY(-50%); width:3px; height:60%;
+      background: var(--fde); border-radius: 2px; box-shadow: 0 0 8px var(--fde);
+    }
+    .settings-nav__item { position: relative; }
+    .settings-nav__item svg { width: 16px; height: 16px; flex: 0 0 auto; color: var(--muted); }
+    .settings-nav__item.is-active svg { color: var(--fde); }
+
+    /* settings sections */
+    .settings-section { display: none; }
+    .settings-section.is-active { display: block; }
+
+    /* form grid */
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+    /* location cards */
+    .loc-card { border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; }
+    .loc-card__head { background: var(--panel-2); padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); }
+
+    /* toggle row */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0; border-bottom: 1px dashed var(--line);
+    }
+    .toggle-row:last-child { border-bottom: 0; }
+    .toggle-row__info { min-width: 0; }
+    .toggle-row__label { font-weight: 600; font-size: 13.5px; color: var(--text); }
+    .toggle-row__desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* integration cards */
+    .int-card {
+      background: var(--panel-solid); border: 1px solid var(--line);
+      border-radius: var(--r-lg); padding: 18px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .int-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .int-card__icon { width: 42px; height: 42px; border-radius: var(--r); background: var(--panel-2); border: 1px solid var(--line-2); display: grid; place-items: center; color: var(--fde); flex: 0 0 auto; }
+    .int-card__name { font-weight: 700; font-size: 14px; color: var(--text); }
+    .int-card__sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* accent swatches */
+    .swatch-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .swatch {
+      width: 44px; height: 44px; border-radius: var(--r-lg);
+      border: 2px solid transparent; cursor: pointer;
+      transition: transform .13s, box-shadow .13s, border-color .13s;
+      position: relative;
+    }
+    .swatch:hover { transform: scale(1.1); }
+    .swatch.is-active { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.2); }
+    .swatch.is-active::after {
+      content: ""; position: absolute; inset: 4px;
+      border: 1.5px solid rgba(255,255,255,.7); border-radius: 3px;
+    }
+
+    /* role matrix */
+    .perm-check { display: grid; place-items: center; }
+    .perm-check input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--fde); cursor: pointer; }
+  </style>
+</head>
+<body data-page="settings">
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <div class="content content--wide fade-in">
+
+        <!-- PAGE HEAD -->
+        <div class="page-head">
+          <div>
+            <div class="stencil">Store · FFL · System Configuration</div>
+            <h1>Settings</h1>
+            <div class="meta-row mt-8">
+              <span><span class="sdot sdot--go"></span> LIVE</span><span class="sep">/</span>
+              <span>FFL 01 · WILDE BUILT TACTICAL</span><span class="sep">/</span>
+              <span>2 LOCATIONS · SD + ESC</span><span class="sep">/</span>
+              <span id="settingsClock">--:--:-- PST</span>
+            </div>
+          </div>
+          <div class="flex gap-8 items-center wrap">
+            <span class="tag tag--od"><span class="dot"></span>Configuration Mode</span>
+            <button class="btn btn--ghost btn--sm" onclick="WBT.ui.toast('Audit log exported (demo)','file-down')"><i data-lucide="file-down"></i> Export Audit Log</button>
+            <button class="btn btn--primary" id="globalSaveBtn" onclick="handleGlobalSave()"><i data-lucide="save"></i> Save All Changes</button>
+          </div>
+        </div>
+
+        <!-- KPI ROW -->
+        <div class="grid grid-12 mb-24" id="settingsKpiRow"></div>
+
+        <!-- SETTINGS LAYOUT -->
+        <div class="settings-layout">
+
+          <!-- LEFT NAV -->
+          <div class="settings-nav panel panel--pad" id="settingsNav">
+            <div class="stencil mb-16">Configuration Modules</div>
+            <div id="settingsNavItems"></div>
+          </div>
+
+          <!-- RIGHT CONTENT AREA -->
+          <div id="settingsContent">
+
+            <!-- STORE PROFILE -->
+            <div class="settings-section" id="sec-store">
+              <div class="panel bracketed mb-16">
+                <div class="panel__head">
+                  <span class="stencil"><i data-lucide="store" style="width:14px;height:14px"></i> Store Profile</span>
+                  <div class="right">
+                    <span class="tag tag--steel">Master Record</span>
+                    <button class="btn btn--primary btn--sm" onclick="saveSection('store')"><i data-lucide="save"></i> Save Profile</button>
+                  </div>
+                </div>
+                <div class="panel__body">
+                  <div class="form-grid-2 mb-16">
+                    <div>
+                      <label class="fld">Legal Business Name</label>
+                      <input class="input" type="text" value="Wilde Built Tactical, LLC" id="s-biz-name">
+                    </div>
+                    <div>
+                      <label class="fld">DBA / Trade Name</label>
+                      <input class="input" type="text" value="Wilde Built Tactical" id="s-dba">
+                    </div>
+                    <div>
+                      <label class="fld">Primary Phone</label>
+                      <input class="input" type="text" value="(619) 555-0188" id="s-phone">
+                    </div>
+                    <div>
+                      <label class="fld">Primary Email</label>
+                      <input class="input" type="email" value="ops@wildebuilttactical.com" id="s-email">
+                    </div>
+                    <div>
+                      <label class="fld">Website</label>
+                      <input class="input" type="text" value="https://wildebuilttactical.com" id="s-web">
+                    </div>
+                    <div>
+                      <label class="fld">Timezone</label>
+                      <select class="input" id="s-tz">
+                        <option selected>America/Los_Angeles (PST/PDT)</option>
+                        <option>America/Denver (MST/MDT)</option>
+                        <option>America/Chicago (CST/CDT)</option>
+                        <option>America/New_York (EST/EDT)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <hr class="divider">
+
+                  <!-- LOCATIONS -->
+                  <div class="stencil mb-16">Storefronts</div>
+                  <div class="grid grid-2" id="locationCards"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FFL & COMPLIANCE -->
+            <div class="settings-section" id="sec-ffl">
+              <div class="panel bracketed mb-16">
+                <div class="panel__head">
+                  <span class="stencil"><i data-lucide="shield-check" style="width:14px;height:14px"></i> FFL &amp; CA Compliance</span>
+                  <div class="right">
+                    <span class="tag tag--fde"><span class="dot"></span>Active FFL</span>
+                    <button class="btn btn--primary btn--sm" onclick="saveSection('ffl')"><i data-lucide="save"></i> Save Compliance</button>
+                  </div>
+                </div>
+                <div class="panel__body">
+                  <div class="alert alert--amber mb-16">
+                    <i data-lucide="triangle-alert"></i>
+                    <div>FFL details are federally regulated. Changes must match your ATF-issued license exactly. Any discrepancy may result in compliance violations.</div>
+                  </div>
+                  <div class="form-grid-3 mb-16">
+                    <div>
+                      <label class="fld">FFL License Number</label>
+                      <input class="input mono" type="text" value="9-33-XXX-XX-XX-XXXXX" id="s-ffl">
+                    </div>
+                    <div>
+                      <label class="fld">FFL Expiration Date</label>
+                      <input class="input" type="date" value="2025-12-31" id="s-ffl-exp">
+                    </div>
+                    <div>
+                      <label class="fld">FFL Type</label>
+                      <select class="input" id="s-ffl-type">
+                        <option selected>Type 01 — Dealer in Firearms</option>
+                        <option>Type 02 — Pawnbroker</option>
+                        <option>Type 07 — Manufacturer</option>
+                        <option>Type 09 — Importer</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="fld">CA COE Number</label>
+                      <input class="input mono" type="text" value="CA-COE-2024-XXXX" id="s-coe">
+                    </div>
+                    <div>
+                      <label class="fld">DOJ CFD Number</label>
+                      <input class="input mono" type="text" value="CFD-SD-XXXXX" id="s-cfd">
+                    </div>
+                    <div>
+                      <label class="fld">DROS Submitter ID</label>
+                      <input class="input mono" type="text" value="WBT-SD-001" id="s-dros-id">
+                    </div>
+                  </div>
+
+                  <hr class="divider">
+                  <div class="stencil mb-16">Compliance Automation</div>
+
+                  <div id="fflToggles"></div>
+
+                  <hr class="divider">
+                  <div class="stencil mb-16">Bound Book</div>
+                  <div class="flex gap-16 wrap mt-8">
+                    <div style="flex:1;min-width:200px">
+                      <label class="fld">Bound Book Mode</label>
+                      <select class="input" id="s-bb-mode">
+                        <option selected>Electronic (ATF eZ Check)</option>
+                        <option>Paper + Digital Backup</option>
+                        <option>Paper Only</option>
+                      </select>
+                    </div>
+                    <div style="flex:1;min-width:200px">
+                      <label class="fld">Retention Period</label>
+                      <select class="input" id="s-bb-ret">
+                        <option selected>20 Years (ATF Minimum)</option>
+                        <option>25 Years</option>
+                        <option>Indefinite</option>
+                      </select>
+                    </div>
+                    <div style="flex:1;min-width:200px">
+                      <label class="fld">Auto-Archive Entries Older Than</label>
+                      <select class="input">
+                        <option selected>5 Years</option>
+                        <option>3 Years</option>
+                        <option>10 Years</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- NOTIFICATIONS -->
+            <div class="settings-section" id="sec-notifications">
+              <div class="panel mb-16">
+                <div class="panel__head">
+                  <span class="stencil"><i data-lucide="bell" style="width:14px;height:14px"></i> Notifications &amp; Alerts</span>
+                  <div class="right">
+                    <button class="btn btn--sm btn--ghost" onclick="toggleAllNotif(false)">Disable All</button>
+                    <button class="btn btn--sm btn--ghost" onclick="toggleAllNotif(true)">Enable All</button>
+                    <button class="btn btn--primary btn--sm" onclick="saveSection('notifications')"><i data-lucide="save"></i> Save</button>
+                  </div>
+                </div>
+                <div class="panel__body" id="notifPanel"></div>
+              </div>
+            </div>
+
+            <!-- TEAM & ROLES -->
+            <div class="settings-section" id="sec-team">
+              <div class="panel mb-16">
+                <div class="panel__head">
+                  <span class="stencil"><i data-lucide="users" style="width:14px;height:14px"></i> Team &amp; Role Permissions</span>
+                  <div class="right">
+                    <button class="btn btn--sm btn--ghost" onclick="WBT.ui.toast('Invite link copied to clipboard (demo)','link')"><i data-lucide="user-plus"></i> Invite Staff</button>
+                    <button class="btn btn--primary btn--sm" onclick="saveSection('team')"><i data-lucide="save"></i> Save Roles</button>
+                  </div>
+                </div>
+                <div class="panel__body panel__body--flush">
+                  <div class="table-wrap" id="roleMatrixWrap"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel__head">
+                  <span class="stencil"><i data-lucide="user-check" style="width:14px;height:14px"></i> Active Staff Roster</span>
+                  <div class="right"><span class="tag tag--od" id="staffCountTag"></span></div>
+                </div>
+                <div class="panel__body panel__body--flush">
+                  <div class="table-wrap" id="staffTable"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- INTEGRATIONS -->
+            <div class="settings-section" id="sec-integrations">
+              <div class="panel mb-16">
+                <div class="panel__head">
+                  <span class="stencil"><i data-lucide="plug" style="width:14px;height:14px"></i> Integrations &amp; Connected Services</span>
+                  <div class="right">
+                    <span id="intConnectedTag"></span>
+                  </div>
+                </div>
+                <div class="panel__body">
+                  <div class="grid grid-3" id="intCards"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel__head">
+                  <span class="stencil"><i data-lucide="activity" style="width:14px;height:14px"></i> API &amp; Webhooks</span>
+                  <div class="right">
+                    <button class="btn btn--sm btn--ghost" onclick="WBT.ui.toast('Webhook test sent (demo)','zap')"><i data-lucide="zap"></i> Test Webhook</button>
+                  </div>
+                </div>
+                <div class="panel__body" id="apiPanel"></div>
+              </div>
+            </div>
+
+            <!-- APPEARANCE -->
+            <div class="settings-section" id="sec-appearance">
+              <div class="panel bracketed mb-16">
+                <div class="panel__head">
+                  <span class="stencil"><i data-lucide="palette" style="width:14px;height:14px"></i> Appearance &amp; Theme</span>
+                  <div class="right">
+                    <span class="tag tag--amber"><span class="dot"></span>Live Preview</span>
+                    <button class="btn btn--primary btn--sm" onclick="saveSection('appearance')"><i data-lucide="save"></i> Save Theme</button>
+                  </div>
+                </div>
+                <div class="panel__body" id="appearancePanel"></div>
+              </div>
+            </div>
+
+          </div><!-- /settingsContent -->
+        </div><!-- /settings-layout -->
+
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/settings.js"></script>
+</body>
+</html>

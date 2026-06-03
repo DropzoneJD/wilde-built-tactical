@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marketing Ops — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/css/tactical.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    .auto-card { background: var(--panel-2); border: 1px solid var(--line-2); border-radius: var(--r-lg); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+    .auto-card__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .auto-card__stats { display: flex; gap: 18px; padding-top: 8px; border-top: 1px dashed var(--line); }
+    .auto-mini { display: flex; flex-direction: column; gap: 2px; }
+    .auto-mini span { font-family: var(--f-mono); font-size: 18px; font-weight: 600; color: var(--text); }
+    .auto-mini label { font-family: var(--f-tac); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .funnel-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+    .funnel-row:last-child { border-bottom: 0; }
+    .funnel-label { font-family: var(--f-tac); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); min-width: 88px; }
+    .funnel-val { font-family: var(--f-mono); font-size: 13px; color: var(--text); min-width: 64px; text-align: right; }
+    .compose-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 900px) { .compose-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-page="marketing">
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <div class="content content--wide fade-in">
+
+        <!-- PAGE HEAD -->
+        <div class="page-head">
+          <div>
+            <div class="stencil">Campaigns · Automations · Broadcasts</div>
+            <h1>Marketing Ops</h1>
+            <div class="meta-row mt-8">
+              <span><span class="sdot sdot--go"></span> LIVE</span><span class="sep">/</span>
+              <span id="mktClock">--:--:-- PST</span><span class="sep">/</span>
+              <span id="mktListMeta">-- MEMBERS · --%  OPT-IN</span>
+            </div>
+          </div>
+          <div class="flex gap-8 items-center wrap">
+            <div class="seg" id="viewSeg">
+              <button data-v="all" class="is-active">All</button>
+              <button data-v="live">Live</button>
+              <button data-v="draft">Draft</button>
+            </div>
+            <button class="btn" onclick="WBT.ui.toast('Exporting campaign report (demo)','file-down')"><i data-lucide="file-down"></i> Export</button>
+            <button class="btn btn--primary" onclick="document.getElementById('composePanel').scrollIntoView({behavior:'smooth'})"><i data-lucide="send"></i> New Broadcast</button>
+          </div>
+        </div>
+
+        <!-- KPI ROW -->
+        <div class="grid mb-24" id="mktKpiRow" style="grid-template-columns:repeat(6,1fr)"></div>
+
+        <!-- MAIN GRID -->
+        <div class="grid grid-12">
+
+          <!-- CAMPAIGNS TABLE -->
+          <div class="panel bracketed col-12">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="radio" style="width:14px;height:14px"></i> Campaign Matrix</span>
+              <div class="right">
+                <span class="tag tag--success"><span class="dot"></span>Live</span>
+                <span class="tag tag--steel">Draft</span>
+                <span class="tag tag--fde tag--ghost">Click row for detail</span>
+              </div>
+            </div>
+            <div class="panel__body panel__body--flush">
+              <div class="table-wrap">
+                <table class="tac-table" id="campaignTable"></table>
+              </div>
+            </div>
+          </div>
+
+          <!-- AUTOMATIONS -->
+          <div class="panel col-8">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="zap" style="width:14px;height:14px"></i> Automation Engine</span>
+              <div class="right">
+                <span class="tag tag--od" id="autoLiveCount"></span>
+              </div>
+            </div>
+            <div class="panel__body">
+              <div class="grid grid-2" id="autoCards" style="gap:12px"></div>
+            </div>
+          </div>
+
+          <!-- ENGAGEMENT FUNNEL -->
+          <div class="panel col-4">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="filter" style="width:14px;height:14px"></i> Engagement Funnel</span>
+              <div class="right"><span class="tag tag--ghost tag--steel">30d avg</span></div>
+            </div>
+            <div class="panel__body" id="funnelPanel"></div>
+          </div>
+
+          <!-- CHANNEL PERFORMANCE CHART -->
+          <div class="panel bracketed col-7">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="activity" style="width:14px;height:14px"></i> Channel Performance · 14-Day</span>
+              <div class="right">
+                <span class="tag tag--fde"><span class="dot"></span>Email</span>
+                <span class="tag tag--blue"><span class="dot"></span>SMS</span>
+              </div>
+            </div>
+            <div class="panel__body">
+              <div class="chart-box" style="height:220px"><canvas id="channelChart"></canvas></div>
+            </div>
+          </div>
+
+          <!-- COMPOSE BROADCAST -->
+          <div class="panel col-5" id="composePanel">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="send" style="width:14px;height:14px"></i> Compose Broadcast</span>
+              <div class="right"><span class="tag tag--amber" id="audienceSize"></span></div>
+            </div>
+            <div class="panel__body" style="display:flex;flex-direction:column;gap:14px">
+              <div>
+                <label class="fld">Audience Segment</label>
+                <select class="input" id="audienceSeg" onchange="mktUpdateAudience()">
+                  <option value="vip">VIP / Collector</option>
+                  <option value="regular" selected>Regular</option>
+                  <option value="new">New Buyers</option>
+                  <option value="lapsed">Lapsed (Win-Back)</option>
+                </select>
+              </div>
+              <div>
+                <label class="fld">Channel</label>
+                <div class="seg" id="broadcastChan" style="width:100%">
+                  <button data-c="email" class="is-active" style="flex:1" onclick="mktSelectChan(this)">Email</button>
+                  <button data-c="sms" style="flex:1" onclick="mktSelectChan(this)">SMS</button>
+                </div>
+              </div>
+              <div>
+                <label class="fld" id="subjectLabel">Subject Line</label>
+                <input class="input" id="broadcastSubject" placeholder="e.g. New CA Roster Drops — this week only" />
+              </div>
+              <div>
+                <label class="fld">Preview Text / Body</label>
+                <textarea class="input" id="broadcastPreview" rows="3" placeholder="Short preview line or SMS body (160 chars max for SMS)…"></textarea>
+              </div>
+              <button class="btn btn--primary btn--block" onclick="mktReviewBroadcast()">
+                <i data-lucide="send"></i> Review &amp; Send
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/marketing.js"></script>
+</body>
+</html>

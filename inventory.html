@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Armory — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/css/tactical.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    /* page-scoped layout-only tweaks */
+    .arm-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+    .arm-toolbar .search{flex:1 1 280px;min-width:220px}
+    .cat-segs{display:inline-flex;flex-wrap:wrap;gap:6px}
+    .cat-segs .btn{padding:7px 12px}
+    .cat-segs .btn.is-on{background:var(--fde);color:#1a1208;border-color:var(--fde);font-weight:700}
+    .arm-table td{vertical-align:middle}
+    .arm-table .meter{width:78px;margin-top:5px}
+    .sn-flag{display:inline-flex;align-items:center;gap:4px;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.08em;color:var(--amber);text-transform:uppercase}
+    .sn-flag svg{width:11px;height:11px}
+    .stock-cell{min-width:96px}
+    .stock-qty{font-family:var(--f-mono);font-weight:700;font-size:14px}
+    .reorder-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+    .reorder-row:last-child{border-bottom:0}
+    .ser-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--line)}
+    .ser-row:last-child{border-bottom:0}
+    .empty-row td{padding:34px 16px;text-align:center;color:var(--muted)}
+    .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+    /* nested side column: force a single 1fr track so a Chart.js canvas can't
+       blow the implicit 'auto' column past the grid track (no h-overflow) */
+    .arm-side{grid-template-columns:minmax(0,1fr);min-width:0}
+    .arm-side>.panel{min-width:0}
+    .arm-side .chart-box{min-width:0}
+    /* let the wide ledger track shrink so the table scrolls internally, not the page */
+    .arm-main{min-width:0}
+  </style>
+</head>
+<body data-page="inventory">
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <div class="content content--wide fade-in">
+
+        <!-- page head -->
+        <div class="page-head">
+          <div>
+            <div class="stencil">Inventory Control</div>
+            <h1>The Armory</h1>
+            <div class="meta-row mt-8">
+              <span><span class="sdot sdot--go"></span> STOCK SYNCED</span><span class="sep">/</span>
+              <span id="armCount">-- SKUS TRACKED</span><span class="sep">/</span>
+              <span>VAULT + FLOOR · SD + ESC</span><span class="sep">/</span>
+              <span id="armStamp">--:--:-- PST</span>
+            </div>
+          </div>
+          <div class="flex gap-8 items-center wrap">
+            <button class="btn" onclick="WBT.ui.toast('Cycle count session started (demo)','scan-line')"><i data-lucide="scan-line"></i> Cycle Count</button>
+            <button class="btn btn--amber" id="btnReceive"><i data-lucide="truck"></i> Receive Shipment</button>
+            <button class="btn btn--primary" id="btnAdd"><i data-lucide="plus"></i> Add Product</button>
+          </div>
+        </div>
+
+        <!-- KPI ROW -->
+        <div class="grid grid-12 mb-24" id="kpiRow"></div>
+
+        <!-- TOOLBAR -->
+        <div class="panel panel--pad mb-24">
+          <div class="arm-toolbar">
+            <div class="search">
+              <i data-lucide="search"></i>
+              <input class="input" id="armSearch" placeholder="Search brand, model or SKU…" autocomplete="off">
+            </div>
+            <div class="seg" id="statusSeg" title="Stock status">
+              <button data-st="all" class="is-active">ALL</button>
+              <button data-st="in">IN STOCK</button>
+              <button data-st="low">LOW</button>
+              <button data-st="out">OUT</button>
+            </div>
+            <button class="btn btn--ghost btn--sm" id="btnClear" title="Reset filters"><i data-lucide="rotate-ccw"></i> Reset</button>
+          </div>
+          <div class="cat-segs" id="catSegs"></div>
+        </div>
+
+        <!-- MAIN GRID -->
+        <div class="grid grid-12">
+
+          <!-- ARMORY TABLE -->
+          <div class="panel bracketed col-9 arm-main">
+            <div class="panel__head">
+              <span class="stencil">Stock Ledger</span>
+              <div class="right">
+                <span class="tag tag--steel" id="resultTag">-- ITEMS</span>
+                <button class="btn btn--ghost btn--sm" onclick="WBT.ui.toast('Exported armory.csv (demo)','file-down')"><i data-lucide="file-down"></i> Export</button>
+              </div>
+            </div>
+            <div class="panel__body panel__body--flush">
+              <div class="table-wrap"><table class="tac-table arm-table" id="armTable"></table></div>
+            </div>
+          </div>
+
+          <!-- SIDE COLUMN -->
+          <div class="col-3 grid arm-side" style="gap:var(--gap)">
+
+            <!-- stock health donut -->
+            <div class="panel">
+              <div class="panel__head"><span class="stencil">Stock Health</span></div>
+              <div class="panel__body">
+                <div class="chart-box" style="height:170px"><canvas id="healthChart"></canvas></div>
+                <div id="healthLegend" class="mt-16"></div>
+              </div>
+            </div>
+
+            <!-- reorder queue -->
+            <div class="panel">
+              <div class="panel__head"><span class="stencil"><i data-lucide="alert-triangle" style="width:14px;height:14px"></i> Reorder Queue</span>
+                <div class="right"><span class="tag tag--amber" id="reorderTag">--</span></div></div>
+              <div class="panel__body" id="reorderQueue" style="padding-top:6px"></div>
+            </div>
+
+            <!-- serialized holdings -->
+            <div class="panel" style="background:linear-gradient(160deg,rgba(194,161,123,.08),var(--panel-solid))">
+              <div class="panel__head"><span class="stencil"><i data-lucide="lock" style="width:14px;height:14px"></i> Serialized Holdings</span></div>
+              <div class="panel__body" id="serializedBox" style="padding-top:8px"></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/inventory.js"></script>
+</body>
+</html>

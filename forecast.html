@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forecast Intelligence — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/css/tactical.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    /* page-scoped layout-only tweaks */
+    .mini-stat{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+    .mini-stat:last-child{border-bottom:0}
+    .bench-row{padding:11px 0;border-bottom:1px dashed var(--line)}
+    .bench-row:last-child{border-bottom:0}
+    .bench-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}
+    .meter--tall{height:9px}
+    .wfor{display:inline-flex;align-items:center;gap:5px;font-family:var(--f-mono);font-size:11px;color:var(--faint)}
+    .legend-chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
+    .legend-chip i{width:16px;height:0;border-top:2px solid currentColor;display:inline-block}
+    .legend-chip.is-dash i{border-top-style:dashed}
+    td.rec-hot{color:var(--amber);font-weight:700}
+    .conf-cell{display:flex;align-items:center;gap:8px;min-width:120px}
+    .conf-cell .meter{flex:1 1 auto}
+  </style>
+</head>
+<body data-page="forecast">
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <div class="content content--wide fade-in">
+
+        <!-- page head -->
+        <div class="page-head">
+          <div>
+            <div class="stencil">Demand Signals + Restock Recommendations</div>
+            <h1>Forecast Intelligence</h1>
+            <div class="meta-row mt-8">
+              <span><span class="sdot sdot--go"></span> MODEL LIVE</span><span class="sep">/</span>
+              <span id="fcClock">--:--:-- PST</span><span class="sep">/</span>
+              <span>HORIZON 14D</span><span class="sep">/</span>
+              <span id="fcCohort">SCORING -- SKUs</span>
+            </div>
+          </div>
+          <div class="flex gap-8 items-center wrap">
+            <div class="seg" id="hzSeg" title="Forecast horizon">
+              <button data-h="7">7D</button><button data-h="14" class="is-active">14D</button>
+              <button data-h="30">30D</button><button data-h="90">90D</button>
+            </div>
+            <button class="btn" onclick="WBT.ui.toast('Demand model retraining queued (demo)','refresh-cw')"><i data-lucide="refresh-cw"></i> Retrain</button>
+            <button class="btn btn--amber" id="approveAll"><i data-lucide="check-check"></i> Approve all reorders</button>
+          </div>
+        </div>
+
+        <!-- KPI ROW (6-up) -->
+        <div class="grid grid-12 mb-24" id="kpiRow"></div>
+
+        <!-- MAIN GRID -->
+        <div class="grid grid-12">
+
+          <!-- demand forecast chart (hero) -->
+          <div class="panel bracketed col-8">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="activity" style="width:14px;height:14px"></i> Demand Curve · Actual + Projected</span>
+              <div class="right">
+                <span class="legend-chip"><i></i> Actual</span>
+                <span class="legend-chip is-dash" style="color:var(--amber)"><i></i> Forecast</span>
+              </div>
+            </div>
+            <div class="panel__body">
+              <div class="flex justify-between items-center wrap gap-8 mb-16">
+                <div class="seg" id="demandSeg">
+                  <button data-s="orders" class="is-active">Total Orders</button>
+                  <button data-s="rifle">Rifles</button>
+                  <button data-s="ammo">Ammunition</button>
+                  <button data-s="optic">Optics</button>
+                  <button data-s="pistol">Handguns</button>
+                </div>
+                <div class="wfor"><i data-lucide="sparkles" style="width:13px;height:13px"></i> <span id="demandHint">90d history → 14d projection</span></div>
+              </div>
+              <div class="chart-box" style="height:270px"><canvas id="demandChart"></canvas></div>
+            </div>
+          </div>
+
+          <!-- model bench -->
+          <div class="panel col-4" style="background:linear-gradient(160deg,rgba(107,125,74,.10),var(--panel-solid))">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="brain-circuit" style="width:14px;height:14px"></i> Model Bench</span>
+              <div class="right"><span class="tag tag--od tag--ghost">SHADOW</span></div>
+            </div>
+            <div class="panel__body" id="modelBench"></div>
+          </div>
+
+          <!-- restock recommendation table (main work surface) -->
+          <div class="panel col-8">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="radar" style="width:14px;height:14px"></i> Restock Recommendations · Priority Queue</span>
+              <div class="right">
+                <div class="seg" id="riskSeg" title="Filter by cover risk">
+                  <button data-f="all" class="is-active">All</button>
+                  <button data-f="crit">Critical</button>
+                  <button data-f="warn">Watch</button>
+                  <button data-f="rec">Reorder</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel__body panel__body--flush">
+              <div class="table-wrap"><table class="tac-table" id="restockTable"></table></div>
+              <div class="flex justify-between items-center wrap gap-8" style="padding:12px 16px;border-top:1px solid var(--line)">
+                <span class="tiny mono muted" id="restockFoot">—</span>
+                <button class="btn btn--ghost btn--sm" onclick="WBT.ui.toast('Restock queue exported to PO draft (demo)','file-down')"><i data-lucide="file-down"></i> Export queue</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- by-category demand bars -->
+          <div class="panel col-4">
+            <div class="panel__head"><span class="stencil">Projected Demand · By Category</span>
+              <div class="right"><span class="tag tag--fde tag--ghost">14D</span></div></div>
+            <div class="panel__body"><div class="chart-box" style="height:230px"><canvas id="catDemandChart"></canvas></div></div>
+          </div>
+
+          <!-- signal blend / drivers -->
+          <div class="panel col-4">
+            <div class="panel__head"><span class="stencil">Signal Blend · Drivers</span></div>
+            <div class="panel__body" id="signalBlend"></div>
+          </div>
+
+          <!-- forecast risk callouts -->
+          <div class="panel col-8">
+            <div class="panel__head"><span class="stencil"><i data-lucide="siren" style="width:14px;height:14px"></i> Forecast Alerts</span>
+              <div class="right"><a href="inventory.html" class="tiny mono" style="color:var(--fde)">ARMORY →</a></div></div>
+            <div class="panel__body" id="fcAlerts" style="display:flex;flex-direction:column;gap:10px"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/forecast.js"></script>
+</body>
+</html>

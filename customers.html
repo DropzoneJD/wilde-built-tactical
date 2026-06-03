@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customer Intel — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/css/tactical.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    .seg-card {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 14px 16px; border-radius: var(--r);
+      border: 1px solid var(--line-2); background: var(--panel-2);
+      transition: border-color .12s;
+    }
+    .seg-card:hover { border-color: rgba(194,161,123,.35); }
+    .seg-card__label { font-family: var(--f-tac); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+    .seg-card__count { font-family: var(--f-display); font-weight: 800; font-size: 26px; line-height: 1; }
+    .seg-card__pct { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+
+    .leaderboard-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px dashed var(--line);
+    }
+    .leaderboard-row:last-child { border-bottom: 0; }
+    .lb-rank { font-family: var(--f-mono); font-size: 12px; color: var(--faint); width: 22px; text-align: right; flex: 0 0 auto; }
+    .lb-bar-wrap { flex: 1 1 auto; }
+    .lb-bar { height: 5px; border-radius: 3px; background: linear-gradient(90deg, var(--fde-deep), var(--fde)); margin-top: 5px; }
+    .lb-val { font-family: var(--f-mono); font-size: 12px; color: var(--fde); flex: 0 0 auto; }
+
+    .tier-card {
+      padding: 14px 16px; border-radius: var(--r);
+      border: 1px solid var(--line-2); background: var(--panel-2);
+    }
+    .tier-card__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .tier-card__name { font-family: var(--f-display); font-weight: 800; font-size: 15px; text-transform: uppercase; letter-spacing: .5px; }
+    .tier-card__count { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+    .tier-card__threshold { font-family: var(--f-mono); font-size: 10px; color: var(--faint); margin-bottom: 8px; }
+    .tier-card__perks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 3px; }
+    .tier-card__perks li { font-size: 12px; color: var(--text-soft); display: flex; align-items: flex-start; gap: 6px; }
+    .tier-card__perks li::before { content: "—"; color: var(--fde); font-family: var(--f-mono); font-size: 10px; margin-top: 2px; }
+  </style>
+</head>
+<body data-page="customers">
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <div class="content content--wide fade-in">
+
+        <!-- page head -->
+        <div class="page-head">
+          <div>
+            <div class="stencil">CRM · Segments · Lifetime Value</div>
+            <h1>Customer Intel</h1>
+            <div class="meta-row mt-8">
+              <span><span class="sdot sdot--go"></span> LIVE</span><span class="sep">/</span>
+              <span id="custCount">-- OPERATORS ON FILE</span><span class="sep">/</span>
+              <span id="optInCount">-- OPT-IN</span><span class="sep">/</span>
+              <span>2 STOREFRONTS · SD + ESC</span>
+            </div>
+          </div>
+          <div class="flex gap-8 items-center wrap">
+            <div class="seg" id="segFilter">
+              <button class="is-active" data-seg="all">All</button>
+              <button data-seg="vip">VIP</button>
+              <button data-seg="regular">Regular</button>
+              <button data-seg="new">New</button>
+              <button data-seg="lapsed">Lapsed</button>
+            </div>
+            <button class="btn" onclick="WBT.ui.toast('Exporting customer roster (demo)','file-down')"><i data-lucide="file-down"></i> Export</button>
+            <button class="btn btn--primary" onclick="WBT.ui.toast('Opening new customer form (demo)','user-plus')"><i data-lucide="user-plus"></i> Add Customer</button>
+          </div>
+        </div>
+
+        <!-- KPI ROW -->
+        <div class="grid mb-24" id="kpiRow" style="grid-template-columns:repeat(6,1fr)"></div>
+
+        <!-- ROW 2: segment donut + segment cards -->
+        <div class="grid grid-12 mb-24">
+
+          <!-- segment donut -->
+          <div class="panel bracketed col-4">
+            <div class="panel__head">
+              <span class="stencil">Customer Segments</span>
+              <div class="right"><span class="tag tag--ghost tag--fde" id="totalCustTag">-- Total</span></div>
+            </div>
+            <div class="panel__body"><div class="chart-box" style="height:240px"><canvas id="segDonut"></canvas></div></div>
+          </div>
+
+          <!-- 4 segment cards + engagement metrics -->
+          <div class="col-8">
+            <div class="grid grid-4 mb-16" id="segCards"></div>
+            <div class="panel panel--pad">
+              <div class="flex items-center justify-between mb-12">
+                <span class="stencil">Engagement Signals</span>
+                <span class="tag tag--od"><span class="dot"></span>30-Day Window</span>
+              </div>
+              <div class="grid grid-4" id="engagementStats"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ROW 3: main customer table -->
+        <div class="panel col-12 mb-24">
+          <div class="panel__head">
+            <span class="stencil"><i data-lucide="users" style="width:14px;height:14px"></i> Operator Roster</span>
+            <div class="right" style="gap:10px">
+              <div class="search" style="width:200px">
+                <i data-lucide="search"></i>
+                <input class="input" id="custSearch" placeholder="Search name or city…" type="text">
+              </div>
+              <span id="rowCount" class="tiny mono muted"></span>
+            </div>
+          </div>
+          <div class="panel__body--flush">
+            <div class="table-wrap" style="max-height:480px;overflow-y:auto">
+              <table class="tac-table" id="custTable"></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 4: loyalty tiers + top customers leaderboard -->
+        <div class="grid grid-12">
+
+          <!-- loyalty tier cards -->
+          <div class="panel col-7">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="shield" style="width:14px;height:14px"></i> Loyalty Program · Tier Structure</span>
+              <div class="right"><span class="tag tag--fde tag--ghost">4 TIERS</span></div>
+            </div>
+            <div class="panel__body">
+              <div class="grid grid-4" id="loyaltyTiers"></div>
+            </div>
+          </div>
+
+          <!-- top 5 leaderboard -->
+          <div class="panel col-5">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="trophy" style="width:14px;height:14px"></i> Top Operators — LTV</span>
+              <div class="right"><a href="#" class="tiny mono" style="color:var(--fde)" onclick="WBT.ui.toast('Full LTV report (demo)','chart-bar');return false">FULL REPORT →</a></div>
+            </div>
+            <div class="panel__body" id="leaderboard"></div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/customers.js"></script>
+</body>
+</html>

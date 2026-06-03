@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Promotions — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/css/tactical.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    .bundle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
+    @media (max-width: 1100px) { .bundle-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px)  { .bundle-grid { grid-template-columns: 1fr; } }
+
+    .bundle-card {
+      position: relative;
+      background: linear-gradient(160deg, var(--panel-2), var(--panel-solid));
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-lg);
+      padding: 18px;
+      overflow: hidden;
+    }
+    .bundle-card::before {
+      content: "";
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--fde), var(--od));
+    }
+    .bundle-card.is-doorbuster {
+      border-color: rgba(255,180,58,.45);
+      box-shadow: 0 0 24px -8px rgba(255,180,58,.2);
+    }
+    .bundle-card.is-doorbuster::before {
+      background: linear-gradient(90deg, var(--amber), var(--danger));
+    }
+    .bundle-name { font-family: var(--f-display); font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+    .bundle-items { font-size: 12px; color: var(--muted); margin: 10px 0; }
+    .bundle-items li { padding: 3px 0; border-bottom: 1px dashed var(--line); }
+    .bundle-items li:last-child { border-bottom: 0; }
+    .bundle-price-row { display: flex; align-items: baseline; gap: 10px; margin-top: 12px; }
+    .bundle-price { font-family: var(--f-display); font-weight: 800; font-size: 26px; color: var(--fde); }
+    .bundle-was { font-family: var(--f-mono); font-size: 13px; color: var(--faint); text-decoration: line-through; }
+
+    .doorbuster-banner {
+      background: linear-gradient(90deg, rgba(255,180,58,.12), rgba(255,180,58,.04));
+      border: 1px solid rgba(255,180,58,.3);
+      border-radius: var(--r);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .promo-code-cell { font-family: var(--f-mono); font-weight: 600; letter-spacing: .08em; font-size: 13px; color: var(--text); }
+    .usage-cell { min-width: 120px; }
+    .usage-text { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); margin-bottom: 5px; }
+  </style>
+</head>
+<body data-page="promotions">
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <div class="content content--wide fade-in">
+
+        <!-- PAGE HEAD -->
+        <div class="page-head">
+          <div>
+            <div class="stencil">Codes · Bundles · Doorbusters</div>
+            <h1>Promotions</h1>
+            <div class="meta-row mt-8">
+              <span><span class="sdot sdot--go"></span> LIVE</span><span class="sep">/</span>
+              <span id="promoMeta">-- ACTIVE · -- SCHEDULED</span><span class="sep">/</span>
+              <span>PROMO ENGINE ONLINE</span>
+            </div>
+          </div>
+          <div class="flex gap-8 items-center wrap">
+            <div class="seg" id="filterSeg">
+              <button data-f="all" class="is-active">All</button>
+              <button data-f="active">Active</button>
+              <button data-f="scheduled">Scheduled</button>
+              <button data-f="ended">Ended</button>
+            </div>
+            <button class="btn" onclick="WBT.ui.toast('Promo performance report exported (demo)','file-down')"><i data-lucide="file-down"></i> Export</button>
+            <button class="btn btn--primary" id="createPromoBtn"><i data-lucide="plus"></i> Create Promotion</button>
+          </div>
+        </div>
+
+        <!-- KPI ROW -->
+        <div class="grid mb-24" id="kpiRow" style="grid-template-columns: repeat(6, 1fr);"></div>
+
+        <!-- MAIN GRID -->
+        <div class="grid grid-12">
+
+          <!-- PROMO TABLE col-8 -->
+          <div class="panel bracketed col-8">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="tag" style="width:13px;height:13px"></i> Active Promotions</span>
+              <div class="right">
+                <div class="search" style="width:200px">
+                  <i data-lucide="search"></i>
+                  <input class="input" id="promoSearch" placeholder="Search codes..." style="padding-top:7px;padding-bottom:7px;font-size:12px;">
+                </div>
+              </div>
+            </div>
+            <div class="panel__body--flush">
+              <div class="table-wrap">
+                <table class="tac-table" id="promoTable"></table>
+              </div>
+            </div>
+          </div>
+
+          <!-- REVENUE BY CODE CHART col-4 -->
+          <div class="panel col-4">
+            <div class="panel__head">
+              <span class="stencil">Revenue by Code</span>
+              <div class="right"><span class="tag tag--fde tag--ghost">30D</span></div>
+            </div>
+            <div class="panel__body">
+              <div class="chart-box" style="height:320px"><canvas id="promoRevenueChart"></canvas></div>
+            </div>
+          </div>
+
+          <!-- BUNDLE SHOWCASE col-8 -->
+          <div class="panel col-8">
+            <div class="panel__head">
+              <span class="stencil"><i data-lucide="package" style="width:13px;height:13px"></i> Bundle Packages</span>
+              <div class="right">
+                <span class="tag tag--od"><span class="dot"></span>3 Active</span>
+                <button class="btn btn--sm" onclick="WBT.ui.toast('Bundle builder opened (demo)','layers')"><i data-lucide="plus"></i> New Bundle</button>
+              </div>
+            </div>
+            <div class="panel__body">
+              <div id="bundleShowcase"></div>
+            </div>
+          </div>
+
+          <!-- PROMO STATS SIDEBAR col-4 -->
+          <div class="col-4 grid" style="gap:var(--gap)">
+            <!-- Redemption Timeline -->
+            <div class="panel">
+              <div class="panel__head"><span class="stencil"><i data-lucide="trending-up" style="width:13px;height:13px"></i> Redemption Trend</span></div>
+              <div class="panel__body">
+                <div class="chart-box" style="height:130px"><canvas id="redemptionChart"></canvas></div>
+              </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="panel">
+              <div class="panel__head"><span class="stencil">Promo Intelligence</span></div>
+              <div class="panel__body" id="promoIntel" style="padding-top:10px;"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-stack"></div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/pages/promotions.js"></script>
+</body>
+</html>
