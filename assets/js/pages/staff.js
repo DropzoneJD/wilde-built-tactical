@@ -6,7 +6,7 @@
   // Weekly schedule: each staff member x Mon-Sun
   // Patterns: 0=OFF, 1=Open (9-5), 2=Close (12-8), 3=Double (9-8 event)
   const SCHEDULE_PATTERNS = [
-    // Cole Wilde  (owner - admin days)
+    // Ray Calhoun (owner - admin days)
     [1, 0, 1, 0, 1, 0, 0],
     // Marcus Reyes (manager, covers both shops)
     [1, 1, 0, 1, 1, 2, 0],

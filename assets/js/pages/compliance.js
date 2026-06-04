@@ -20,7 +20,7 @@
     { label: 'DOJ Delayed / Hold',  icon: 'shield-alert', val: holdCount, foot: 'pending DOJ disposition', bad: true },
     { label: 'Roster Compliance',   icon: 'list-checks',  val: '100%', foot: 'all handguns CA-certified', good: true },
     { label: 'Bound Book Integrity',icon: 'book-lock',    val: '99.4%', foot: '1,420 lines reconciled', accent: true },
-    { label: 'FFL Status',          icon: 'badge-check',  val: '01', valSmall: 'ACTIVE', foot: 'Cole Wilde · DOJ COE', good: true },
+    { label: 'FFL Status',          icon: 'badge-check',  val: '01', valSmall: 'ACTIVE', foot: 'Ray Calhoun · DOJ COE', good: true },
   ];
   document.getElementById('kpiRow').innerHTML = kpis.map(k => {
     const color = k.bad ? 'var(--danger)' : k.warn ? 'var(--amber)' : k.good ? 'var(--success)' : '';

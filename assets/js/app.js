@@ -58,9 +58,9 @@
       </div>
       <nav class="nav">${items}</nav>
       <div class="sidebar__foot">
-        <div class="avatar">CW</div>
+        <div class="avatar">RC</div>
         <div style="line-height:1.2;min-width:0">
-          <div style="font-weight:600;font-size:13px">Cole Wilde</div>
+          <div style="font-weight:600;font-size:13px">Ray Calhoun</div>
           <div class="mono" style="font-size:10px;color:var(--fde)">FFL 01 · OWNER</div>
         </div>
         <a href="index.html" class="btn btn--icon btn--ghost" title="Sign out" style="margin-left:auto"><i data-lucide="log-out"></i></a>

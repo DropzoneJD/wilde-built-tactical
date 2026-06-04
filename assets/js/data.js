@@ -199,7 +199,7 @@
 
   // -------------------------------------------------- staff
   const staff = [
-    { name: 'Cole Wilde', role: 'Owner / FFL Holder', loc: 'San Diego', sales: 0, isOwner: true, on: true, certs: ['FFL 01','CA COE','ATF Compliant'] },
+    { name: 'Ray Calhoun', role: 'Owner / FFL Holder', loc: 'San Diego', sales: 0, isOwner: true, on: true, certs: ['FFL 01','CA COE','ATF Compliant'] },
     { name: 'Marcus Reyes', role: 'Store Manager', loc: 'San Diego', sales: 8420000, on: true, certs: ['DROS Cert','Range Safety'] },
     { name: 'Dani Cortez', role: 'Sales / DROS Specialist', loc: 'San Diego', sales: 6110000, on: true, certs: ['DROS Cert'] },
     { name: 'Trevor Maddox', role: 'Gunsmith', loc: 'San Diego', sales: 1740000, on: false, certs: ['Armorer: AR','Armorer: Glock'] },
