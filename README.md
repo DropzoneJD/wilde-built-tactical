@@ -48,6 +48,32 @@ re-skins the whole UI.
 | ⛊ | **Staff & Range** | Team roster, on-shift status, sales leaderboard, weekly schedule, certifications tracker (DROS cert, FFL, armorer, range safety). |
 | ⚙ | **Settings** | Store + FFL config, notifications, role matrix, integrations, and a **live accent-color theming** showcase. |
 
+## 🛒 Customer Storefront (`/store/`)
+
+A full **customer-facing e-commerce site** that sells the *same products* the Armory manages
+(shared catalog — out-of-stock in the back office is out-of-stock in the shop). Premium tactical
+retail: cinematic hero, category tiles, product grid, slide-out cart, and a refined checkout.
+
+| Page | Highlights |
+|---|---|
+| **Home** (`store/index.html`) | Hero, category tiles, new arrivals, on-sale, and a back-in-stock showcase |
+| **Shop** (`store/shop.html`) | Filterable catalog — category / brand / price / CA-compliance / availability / sale, live sort, URL-driven filters, filter chips, load-more |
+| **Product** (`store/product.html`) | Gallery, specs, financing, FFL-ships notice, and **back-in-stock notifications** when out of stock |
+| **Cart** (`store/cart.html`) | Qty steppers, **promo codes** (`RANGEDAY15`, `VETERAN`), live totals, FFL notice, cross-sell |
+| **Checkout** (`store/checkout.html`) | Contact → **FFL finder** → shipping → payment, with a live order summary |
+
+**Two headline features, both genuinely functional:**
+
+- 🗺️ **FFL Finder at checkout** — firearms must ship to a licensed dealer, so the buyer finds one.
+  Enter any US ZIP → **real geocoding** (Zippopotam.us, keyless, with a bundled California fallback
+  for offline) → **haversine distance** to a 36-dealer dataset, sorted nearest-first → an interactive
+  **Leaflet/OpenStreetMap** map with pins → select a dealer and its transfer fee flows into the order
+  total and the confirmation. Try `92101` (San Diego) vs `95814` (Sacramento) — the results re-sort.
+- 🔔 **Back-in-stock alerts** — every out-of-stock product (in-grid, on the product page, and via a
+  modal) takes an email and persists the subscription, mirroring WBT's existing OOS pattern.
+
+The cart (localStorage), favorites, and back-in-stock subscriptions all persist across pages.
+
 ## Run it
 
 It's static. Any of these work:
@@ -63,7 +89,8 @@ npx serve .
 # or just open index.html in a browser
 ```
 
-Start at **`index.html`** (the tactical login — any credentials enter the demo) → **Command Center**.
+- **Owner/staff command center:** start at **`index.html`** (the tactical login — any credentials enter) → **Command Center**.
+- **Customer storefront:** open **`store/index.html`** → shop → cart → checkout (try the FFL finder).
 
 ## Project layout
 

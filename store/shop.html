@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shop — Wilde Built Tactical</title>
+  <meta name="description" content="Browse the full WBT catalog — CA-legal rifles, handguns, optics, ammo and accessories. Filter by category, brand, price and availability.">
+  <link rel="stylesheet" href="assets/store.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    /* --- shop layout only; all colors/type from store.css --- */
+    .shop-layout{display:grid;grid-template-columns:256px 1fr;gap:28px;padding-bottom:60px;align-items:start;}
+    .shop-sidebar{position:sticky;top:calc(var(--header-h) + 16px);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;}
+    .sidebar-toggle{display:none;}
+    .filter-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line);}
+    .filter-head h3{font-size:14px;letter-spacing:.06em;}
+    .filter-section{border-bottom:1px solid var(--line);}
+    .filter-section:last-child{border-bottom:0;}
+    .filter-section__hd{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;cursor:pointer;user-select:none;transition:.12s;}
+    .filter-section__hd:hover{background:var(--panel-2);}
+    .filter-section__hd span{font-family:var(--f-tac);font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-soft);}
+    .filter-section__body{padding:8px 18px 14px;}
+    .filter-section.is-collapsed .filter-section__body{display:none;}
+    .filter-chevron{width:14px;height:14px;color:var(--faint);transition:transform .15s;}
+    .filter-section.is-collapsed .filter-chevron{transform:rotate(-90deg);}
+    .cat-filter-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;cursor:pointer;border-radius:var(--r);transition:.12s;}
+    .cat-filter-item:hover .cat-label{color:var(--fde);}
+    .cat-filter-item.is-active .cat-label{color:var(--fde);font-weight:600;}
+    .cat-filter-item.is-active{background:rgba(194,161,123,.06);padding-left:6px;padding-right:6px;margin:0 -6px;width:calc(100% + 12px);}
+    .cat-label{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--text-soft);transition:.12s;}
+    .cat-label svg{width:14px;height:14px;color:var(--fde);flex:0 0 auto;}
+    .cat-count{font-family:var(--f-mono);font-size:11px;color:var(--faint);}
+    .brand-check{display:flex;align-items:center;gap:9px;padding:6px 0;cursor:pointer;}
+    .brand-check:hover span{color:var(--text);}
+    .brand-check input[type=checkbox]{width:15px;height:15px;accent-color:var(--fde);cursor:pointer;flex:0 0 auto;}
+    .brand-check span{font-size:13px;color:var(--text-soft);}
+    .price-buckets{display:flex;flex-direction:column;gap:2px;}
+    .price-bucket{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:var(--r);cursor:pointer;transition:.12s;}
+    .price-bucket:hover{background:var(--panel-2);}
+    .price-bucket.is-active{background:rgba(194,161,123,.1);outline:1px solid rgba(194,161,123,.3);}
+    .price-bucket span{font-size:13px;color:var(--text-soft);}
+    .price-bucket.is-active span{color:var(--fde);}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;}
+    .toggle-row label{font-size:13.5px;color:var(--text-soft);cursor:pointer;}
+    .toggle-switch{position:relative;width:36px;height:20px;flex:0 0 auto;}
+    .toggle-switch input{opacity:0;width:0;height:0;}
+    .toggle-track{position:absolute;inset:0;background:var(--line-2);border-radius:10px;transition:.2s;cursor:pointer;}
+    .toggle-track::after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:var(--muted);top:3px;left:3px;transition:.2s;}
+    .toggle-switch input:checked+.toggle-track{background:var(--fde);}
+    .toggle-switch input:checked+.toggle-track::after{transform:translateX(16px);background:#1a1208;}
+    .shop-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:18px;flex-wrap:wrap;}
+    .result-count{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);}
+    .result-count b{color:var(--fde);}
+    .toolbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .sort-select{background:var(--bg-2);border:1px solid var(--line-2);color:var(--text);border-radius:var(--r);padding:8px 30px 8px 11px;font-family:var(--f-tac);font-size:12.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;cursor:pointer;}
+    .sort-select:focus{outline:none;border-color:var(--fde);}
+    .active-filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+    .filter-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(194,161,123,.1);border:1px solid rgba(194,161,123,.35);border-radius:20px;padding:4px 10px;font-family:var(--f-tac);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--fde);cursor:pointer;transition:.13s;}
+    .filter-chip:hover{background:rgba(194,161,123,.2);}
+    .filter-chip svg{width:12px;height:12px;}
+    .empty-state{text-align:center;padding:64px 24px;color:var(--muted);}
+    .empty-state svg{width:52px;height:52px;color:var(--line-2);margin-bottom:16px;}
+    .empty-state h3{font-size:22px;margin-bottom:8px;color:var(--text-soft);}
+    .load-more-wrap{text-align:center;padding:30px 0 10px;}
+    .shop-page-head{padding:28px 0 20px;}
+    .shop-page-head h1{font-size:38px;}
+    @media(max-width:900px){
+      .shop-layout{grid-template-columns:1fr;}
+      .shop-sidebar{position:static;}
+      .sidebar-toggle{display:flex;align-items:center;gap:9px;margin-bottom:14px;}
+      .sidebar-inner{display:none;}
+      .sidebar-inner.is-open{display:block;}
+    }
+    @media(max-width:600px){
+      .shop-page-head h1{font-size:28px;}
+      .shop-toolbar{padding:10px 12px;}
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header"></header>
+  <div class="wrap">
+    <div class="crumb" id="shopCrumb"><a href="index.html">Home</a> / <a href="shop.html">Shop</a></div>
+    <div class="shop-page-head">
+      <div class="eyebrow" id="shopEyebrow">Full Catalog</div>
+      <h1 id="shopTitle">All Products</h1>
+    </div>
+
+    <div class="shop-layout">
+      <!-- SIDEBAR -->
+      <aside class="shop-sidebar">
+        <div class="filter-head">
+          <h3>Filters</h3>
+          <button class="btn btn--ghost btn--sm" id="clearFilters" style="padding:5px 10px;font-size:11px"><i data-lucide="x"></i> Clear all</button>
+        </div>
+        <!-- sidebar toggle for mobile -->
+        <button class="sidebar-toggle btn btn--ghost btn--sm" id="sidebarToggle">
+          <i data-lucide="sliders-horizontal"></i> Show Filters
+        </button>
+        <div class="sidebar-inner" id="sidebarInner">
+          <!-- Category -->
+          <div class="filter-section" id="secCategory">
+            <div class="filter-section__hd" data-sec="secCategory">
+              <span>Category</span><i data-lucide="chevron-down" class="filter-chevron"></i>
+            </div>
+            <div class="filter-section__body">
+              <div class="cat-filter-item" data-cat="">
+                <span class="cat-label"><i data-lucide="grid-2x2"></i>All Products</span>
+                <span class="cat-count" id="catCount-all"></span>
+              </div>
+              <div id="catFilterList"></div>
+            </div>
+          </div>
+          <!-- Brand -->
+          <div class="filter-section" id="secBrand">
+            <div class="filter-section__hd" data-sec="secBrand">
+              <span>Brand</span><i data-lucide="chevron-down" class="filter-chevron"></i>
+            </div>
+            <div class="filter-section__body" id="brandList"></div>
+          </div>
+          <!-- Price -->
+          <div class="filter-section" id="secPrice">
+            <div class="filter-section__hd" data-sec="secPrice">
+              <span>Price</span><i data-lucide="chevron-down" class="filter-chevron"></i>
+            </div>
+            <div class="filter-section__body">
+              <div class="price-buckets" id="priceBuckets"></div>
+            </div>
+          </div>
+          <!-- CA Compliance -->
+          <div class="filter-section" id="secCA">
+            <div class="filter-section__hd" data-sec="secCA">
+              <span>CA Compliance</span><i data-lucide="chevron-down" class="filter-chevron"></i>
+            </div>
+            <div class="filter-section__body">
+              <div class="price-buckets" id="caFilters">
+                <div class="price-bucket" data-ca="">
+                  <span>All</span>
+                </div>
+                <div class="price-bucket" data-ca="roster">
+                  <span>CA DOJ Roster</span>
+                </div>
+                <div class="price-bucket" data-ca="featureless">
+                  <span>Featureless</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Availability + Sale -->
+          <div class="filter-section" id="secOpts">
+            <div class="filter-section__hd" data-sec="secOpts">
+              <span>More Filters</span><i data-lucide="chevron-down" class="filter-chevron"></i>
+            </div>
+            <div class="filter-section__body">
+              <div class="toggle-row">
+                <label for="toggleInStock">In stock only</label>
+                <label class="toggle-switch"><input type="checkbox" id="toggleInStock"><span class="toggle-track"></span></label>
+              </div>
+              <div class="toggle-row">
+                <label for="toggleSale">On sale</label>
+                <label class="toggle-switch"><input type="checkbox" id="toggleSale"><span class="toggle-track"></span></label>
+              </div>
+              <div class="toggle-row">
+                <label for="toggleFav">Saved only</label>
+                <label class="toggle-switch"><input type="checkbox" id="toggleFav"><span class="toggle-track"></span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RESULTS -->
+      <div>
+        <!-- Active filter chips -->
+        <div class="active-filters" id="activeFilters"></div>
+        <!-- Toolbar -->
+        <div class="shop-toolbar">
+          <div class="result-count" id="resultCount">Loading…</div>
+          <div class="toolbar-right">
+            <label style="font-family:var(--f-tac);font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Sort</label>
+            <select class="sort-select" id="sortSelect">
+              <option value="featured">Featured</option>
+              <option value="new">Newest</option>
+              <option value="price-asc">Price: Low → High</option>
+              <option value="price-desc">Price: High → Low</option>
+              <option value="rating">Top Rated</option>
+            </select>
+          </div>
+        </div>
+        <!-- Grid -->
+        <div class="product-grid" id="shopGrid"></div>
+        <!-- Empty state -->
+        <div class="empty-state hide" id="emptyState">
+          <i data-lucide="search-x"></i>
+          <h3>No Products Found</h3>
+          <p class="muted" style="max-width:360px;margin:0 auto 20px">Try removing some filters, or browse the full catalog.</p>
+          <button class="btn btn--primary" id="emptyReset"><i data-lucide="refresh-cw"></i> Clear All Filters</button>
+        </div>
+        <!-- Load more -->
+        <div class="load-more-wrap hide" id="loadMoreWrap">
+          <button class="btn" id="loadMoreBtn">
+            <i data-lucide="chevron-down"></i> Load More
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer id="site-footer"></footer>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="../assets/js/data.js"></script>
+  <script src="assets/catalog.js"></script>
+  <script src="assets/store.js"></script>
+  <script src="assets/pages/shop.js"></script>
+</body>
+</html>

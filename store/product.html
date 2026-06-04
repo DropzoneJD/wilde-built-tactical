@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/store.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+</head>
+<body data-cat="product">
+  <header id="site-header"></header>
+  <div class="wrap">
+    <div class="crumb" id="crumb"><a href="index.html">Home</a> / <a href="shop.html">Shop</a> / …</div>
+    <div class="pdp" id="pdp"></div>
+
+    <!-- specs + description -->
+    <section class="section" style="padding-top:8px"><div class="row-2" style="gap:34px;align-items:start">
+      <div class="card card--pad">
+        <div class="eyebrow mb-16">Specifications</div>
+        <table class="spec-table" id="specTable"></table>
+      </div>
+      <div class="card card--pad">
+        <div class="eyebrow mb-16">Overview</div>
+        <p class="muted" id="descText" style="font-size:14.5px"></p>
+        <div class="kv mt-16"><span class="muted">SKU</span><b id="skuVal"></b></div>
+        <div class="kv"><span class="muted">Ships to</span><b id="shipVal"></b></div>
+        <div class="kv"><span class="muted">CA Compliance</span><b id="caVal" style="color:var(--fde)"></b></div>
+      </div>
+    </div></div>
+
+    <!-- related -->
+    <section class="section" style="padding-top:0">
+      <div class="section__head"><div><div class="eyebrow">You May Also Need</div><h2>Related Gear</h2></div></div>
+      <div class="product-grid" id="relatedGrid"></div>
+    </section>
+  </div>
+
+  <footer id="site-footer"></footer>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="../assets/js/data.js"></script>
+  <script src="assets/catalog.js"></script>
+  <script src="assets/store.js"></script>
+  <script src="assets/pages/product.js"></script>
+</body>
+</html>

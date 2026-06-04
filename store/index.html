@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wilde Built Tactical — California Legal Firearms</title>
+  <meta name="description" content="California's largest selection of CA-legal rifles, handguns, optics & ammo. Ship statewide, transfer to your local FFL. Payment plans available.">
+  <link rel="stylesheet" href="assets/store.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero__bg"></div>
+    <div class="wrap"><div class="hero__inner">
+      <div class="fade-in">
+        <div class="eyebrow">California Legal · FFL 01 · San Diego</div>
+        <h1 style="margin-top:16px">CALIFORNIA LEGAL<br><span class="em">FIREPOWER.</span><br>DELIVERED RIGHT.</h1>
+        <p>The largest selection of CA-compliant rifles, handguns, optics and ammo — featureless builds, roster handguns, and the gear to run them. Shipped statewide to your local FFL.</p>
+        <div class="hero__cta">
+          <a href="shop.html" class="btn btn--primary btn--lg"><i data-lucide="store"></i> Shop All Products</a>
+          <a href="shop.html?cat=rifle" class="btn btn--lg"><i data-lucide="crosshair"></i> CA-Legal Rifles</a>
+        </div>
+        <div class="hero__trust">
+          <div><i data-lucide="shield-check"></i> CA Compliance Experts</div>
+          <div><i data-lucide="truck"></i> Ships All Over CA</div>
+          <div><i data-lucide="credit-card"></i> Payment Plans</div>
+        </div>
+      </div>
+      <div class="hero__art fade-in">
+        <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+        <div class="silo-box" style="width:78%;color:var(--fde);filter:drop-shadow(0 14px 26px rgba(0,0,0,.6))" id="heroSilo"></div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- TRUST STRIP -->
+  <div class="wrap"><div class="trust-strip">
+    <div class="trust-item"><span class="ic"><i data-lucide="badge-check"></i></span><div><b>CA-Legal Guaranteed</b><span>Every firearm vetted for compliance</span></div></div>
+    <div class="trust-item"><span class="ic"><i data-lucide="map-pin"></i></span><div><b>FFL Transfer Finder</b><span>Pick up at a dealer near you</span></div></div>
+    <div class="trust-item"><span class="ic"><i data-lucide="bell"></i></span><div><b>Back-in-Stock Alerts</b><span>Never miss a restock</span></div></div>
+    <div class="trust-item"><span class="ic"><i data-lucide="credit-card"></i></span><div><b>4 Easy Payments</b><span>Split any order, interest-free</span></div></div>
+  </div></div>
+
+  <!-- CATEGORIES -->
+  <section class="section"><div class="wrap">
+    <div class="section__head"><div><div class="eyebrow">Shop by Category</div><h2>Gear Up</h2></div>
+      <a href="shop.html" class="link">All products <i data-lucide="arrow-right"></i></a></div>
+    <div class="cat-grid" id="catGrid"></div>
+  </div></section>
+
+  <!-- NEW ARRIVALS -->
+  <section class="section" style="padding-top:0"><div class="wrap">
+    <div class="section__head"><div><div class="eyebrow">Fresh Drops</div><h2>New Arrivals</h2></div>
+      <a href="shop.html?sort=new" class="link">View all <i data-lucide="arrow-right"></i></a></div>
+    <div class="product-grid" id="newGrid"></div>
+  </div></section>
+
+  <!-- PROMO BANNER -->
+  <section class="wrap" style="padding:14px 22px 0">
+    <div class="card" style="background:linear-gradient(120deg,rgba(107,125,74,.18),var(--panel));padding:30px 34px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;border-color:var(--fde-deep)">
+      <div><div class="eyebrow">Featureless Build Special</div>
+        <h2 style="font-size:28px;margin:8px 0">Build a CA-Legal AR — 10% Off Optics</h2>
+        <p class="muted" style="margin:0">Bundle any rifle with an optic and save. Use code <b style="color:var(--fde);font-family:var(--f-mono)">RANGEDAY15</b> at checkout.</p></div>
+      <a href="shop.html?cat=optic" class="btn btn--amber btn--lg"><i data-lucide="scan-eye"></i> Shop Optics</a>
+    </div>
+  </section>
+
+  <!-- ON SALE -->
+  <section class="section"><div class="wrap">
+    <div class="section__head"><div><div class="eyebrow" style="color:var(--amber)">Limited Time</div><h2>On Sale Now</h2></div>
+      <a href="shop.html?sale=1" class="link">All deals <i data-lucide="arrow-right"></i></a></div>
+    <div class="product-grid" id="saleGrid"></div>
+  </div></section>
+
+  <!-- BACK IN STOCK -->
+  <section class="section" style="padding-top:0"><div class="wrap">
+    <div class="card card--pad" style="background:linear-gradient(160deg,var(--panel-2),var(--panel))">
+      <div class="section__head" style="margin-bottom:18px"><div><div class="eyebrow">Most Wanted</div><h2>Get Restock Alerts</h2>
+        <p class="muted" style="margin:6px 0 0;font-size:14px">These sold out fast. Tap <b>Notify Me</b> and we'll email you the second they're back.</p></div></div>
+      <div class="product-grid" id="bisGrid"></div>
+    </div>
+  </div></section>
+
+  <footer id="site-footer"></footer>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="../assets/js/data.js"></script>
+  <script src="assets/catalog.js"></script>
+  <script src="assets/store.js"></script>
+  <script src="assets/pages/home.js"></script>
+</body>
+</html>

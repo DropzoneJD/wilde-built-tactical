@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkout — Wilde Built Tactical</title>
+  <link rel="stylesheet" href="assets/store.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2a17b' stroke-width='2'><circle cx='12' cy='12' r='10'/><line x1='22' y1='12' x2='18' y2='12'/><line x1='6' y1='12' x2='2' y2='12'/><line x1='12' y1='6' x2='12' y2='2'/><line x1='12' y1='22' x2='12' y2='18'/></svg>">
+  <style>
+    .checkout-grid{display:grid;grid-template-columns:1fr 380px;gap:26px;align-items:start;padding:24px 0 50px;}
+    .co-summary{position:sticky;top:80px;}
+    .co-step{display:flex;align-items:center;gap:10px;margin:0 0 16px;}
+    .co-step .n{width:26px;height:26px;border-radius:50%;background:var(--fde);color:#1a1208;display:grid;place-items:center;font-family:var(--f-mono);font-weight:700;font-size:13px;flex:0 0 auto;}
+    .co-step h3{font-size:17px;}
+    .pay-mock{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-family:var(--f-mono);margin-top:6px;}
+    @media(max-width:880px){.checkout-grid{grid-template-columns:1fr;}.co-summary{position:static;}}
+  </style>
+</head>
+<body data-cat="checkout">
+  <header id="site-header"></header>
+  <div class="wrap">
+    <div class="crumb"><a href="index.html">Home</a> / <a href="cart.html">Cart</a> / Checkout</div>
+    <h1 style="font-size:30px">Secure Checkout</h1>
+
+    <div id="coEmpty" class="hide card card--pad" style="text-align:center;padding:60px 20px;margin-top:16px">
+      <i data-lucide="shopping-cart" style="width:46px;height:46px;color:var(--faint)"></i>
+      <h2 style="margin:14px 0 6px">Your cart is empty</h2>
+      <p class="muted mb-16">Add some gear before checking out.</p>
+      <a href="shop.html" class="btn btn--primary"><i data-lucide="store"></i> Shop Now</a>
+    </div>
+
+    <div class="checkout-grid" id="coGrid">
+      <!-- LEFT: form -->
+      <div>
+        <!-- contact -->
+        <div class="card card--pad mb-16">
+          <div class="co-step"><span class="n">1</span><h3>Contact</h3></div>
+          <div class="row-2"><div class="field"><label>First name</label><input class="input" placeholder="John"></div>
+            <div class="field"><label>Last name</label><input class="input" placeholder="Rifleman"></div></div>
+          <div class="row-2"><div class="field"><label>Email</label><input class="input" type="email" placeholder="you@email.com"></div>
+            <div class="field"><label>Phone</label><input class="input" placeholder="(619) 555-0142"></div></div>
+        </div>
+
+        <!-- FFL finder -->
+        <div class="card card--pad mb-16" id="fflCard">
+          <div class="co-step"><span class="n">2</span><h3>FFL Transfer Location</h3></div>
+          <p class="muted" style="font-size:13.5px;margin:0 0 16px" id="fflWhy">
+            Firearms in your order ship to a licensed FFL dealer for pickup and your background check. Find one near you below.
+          </p>
+          <div id="fflMount"></div>
+        </div>
+
+        <!-- shipping (non-FFL items) -->
+        <div class="card card--pad mb-16">
+          <div class="co-step"><span class="n">3</span><h3>Shipping Address</h3>
+            <span class="badge" style="margin-left:auto">Ammo / gear ships here</span></div>
+          <div class="field"><label>Street address</label><input class="input" placeholder="1234 Range Rd"></div>
+          <div class="row-3"><div class="field"><label>City</label><input class="input" placeholder="San Diego"></div>
+            <div class="field"><label>State</label><input class="input" value="CA"></div>
+            <div class="field"><label>ZIP</label><input class="input" placeholder="92101"></div></div>
+        </div>
+
+        <!-- payment (mock) -->
+        <div class="card card--pad">
+          <div class="co-step"><span class="n">4</span><h3>Payment</h3></div>
+          <div class="flex gap-8 mb-16 wrapf">
+            <button class="btn btn--primary btn--sm" id="payCard"><i data-lucide="credit-card"></i> Card</button>
+            <button class="btn btn--sm" id="payPlan"><i data-lucide="calendar"></i> 4 Payments</button>
+          </div>
+          <div class="field"><label>Card number</label><input class="input" placeholder="•••• •••• •••• ••••" inputmode="numeric"></div>
+          <div class="row-3"><div class="field"><label>Expiry</label><input class="input" placeholder="MM/YY"></div>
+            <div class="field"><label>CVC</label><input class="input" placeholder="•••"></div>
+            <div class="field"><label>ZIP</label><input class="input" placeholder="92101"></div></div>
+          <div class="pay-mock"><i data-lucide="lock" style="width:13px"></i> Demo checkout — no real payment is processed.</div>
+        </div>
+      </div>
+
+      <!-- RIGHT: order summary -->
+      <div class="co-summary">
+        <div class="card card--pad">
+          <h3 style="font-size:18px;margin-bottom:14px">Order Summary</h3>
+          <div id="coItems"></div>
+          <hr class="divider">
+          <div id="coTotals"></div>
+          <button class="btn btn--primary btn--block btn--lg" id="placeOrder" style="margin-top:16px"><i data-lucide="shield-check"></i> Place Order</button>
+          <div id="coNotice" class="tiny muted text-center mt-8"></div>
+          <div class="flex items-center gap-8 mt-16" style="justify-content:center;color:var(--muted);font-size:11px"><i data-lucide="lock" style="width:13px"></i> SSL secured · 21+ · CA-legal compliance verified</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer id="site-footer"></footer>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="../assets/js/data.js"></script>
+  <script src="assets/catalog.js"></script>
+  <script src="assets/store.js"></script>
+  <script src="assets/ffl.js"></script>
+  <script src="assets/pages/checkout.js"></script>
+</body>
+</html>
