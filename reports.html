@@ -24,6 +24,38 @@
     .loc-bar-track { flex:1; height:20px; background:var(--panel-2); border-radius:2px; overflow:hidden; display:flex; }
     .loc-bar-fill { height:100%; border-radius:2px 0 0 2px; }
     .loc-bar-val { font-family:var(--f-mono); font-size:12px; width:68px; text-align:right; flex:0 0 auto; color:var(--text-soft); }
+
+    @media (max-width: 760px) {
+      /* KPI strip: JS sets inline repeat(6,1fr) — force 2-up like global #kpiRow rule */
+      #kpiStrip { grid-template-columns: repeat(2, 1fr) !important; }
+      #kpiStrip > * { grid-column: span 1 !important; }
+
+      /* All partial-width col-N panels inside grid-12 must go full-width */
+      .grid-12 .col-4,
+      .grid-12 .col-5,
+      .grid-12 .col-6,
+      .grid-12 .col-7,
+      .grid-12 .col-8 { grid-column: span 12 !important; }
+
+      /* Chart heights: shrink the taller charts so they don't overwhelm a phone screen */
+      #revTrendChart { height: 220px !important; }
+      .chart-box[style*="300px"] { height: 220px !important; }
+
+      /* Toolbar: hide vertical dividers when items wrap to new rows (they look broken inline) */
+      .rpt-divider { display: none; }
+
+      /* Toolbar selects: stretch to available width so they don't clip */
+      .rpt-toolbar label.fld { width: 100%; justify-content: space-between; }
+      .rpt-toolbar select.input { flex: 1; min-width: 0; }
+
+      /* Status line: let it wrap rather than overflow */
+      #rptStatus { white-space: normal; word-break: break-word; }
+    }
+
+    @media (max-width: 430px) {
+      /* Single-column KPI strip on very small phones */
+      #kpiStrip { grid-template-columns: 1fr !important; }
+    }
   </style>
 </head>
 <body data-page="reports">

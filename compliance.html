@@ -33,6 +33,58 @@
     /* tab section show/hide */
     .tabsec{display:none}
     .tabsec.is-on{display:block;animation:fade .3s ease both}
+
+    /* ── mobile hardening ── affects ≤760px only ─────────────────────────────── */
+    @media (max-width: 760px) {
+      /* 1. Score board: override the JS-injected inline grid (200px 1fr) → stack */
+      #scoreBoard .grid {
+        grid-template-columns: 1fr !important;
+      }
+      /* Remove the vertical rule separator and padding that only make sense side-by-side */
+      #scoreBoard .grid > div:first-child {
+        border-right: none !important;
+        border-bottom: 1px solid var(--line);
+        padding-right: 0 !important;
+        padding-bottom: 16px;
+        margin-bottom: 4px;
+      }
+
+      /* 2. DROS card: drop the Release button to its own full-width row so it
+            is never crushed between the day badge and the mid section */
+      .dros-card {
+        grid-template-columns: 62px 1fr;
+        grid-template-rows: auto auto;
+        align-items: start;
+      }
+      /* Release button spans both columns on row 2 */
+      .dros-card > div:last-child {
+        grid-column: 1 / -1;
+        text-align: right;
+        padding-top: 2px;
+      }
+
+      /* 3. DOJ alert strip: allow the inner flex row to wrap so the
+            "DOJ Portal" button doesn't overflow on narrow screens */
+      #drosAlerts .alert {
+        flex-wrap: wrap;
+        row-gap: 8px;
+      }
+      #drosAlerts .alert > div[style*="margin-left:auto"] {
+        margin-left: 0 !important;
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      /* 4. Tab meta row: hide on very narrow so the tab seg gets full width */
+      #tabMeta { display: none; }
+    }
+
+    @media (max-width: 430px) {
+      /* Slightly reduce the large gauge number on the smallest phones */
+      .gauge-num { font-size: 40px; }
+    }
+    /* ── end mobile hardening ────────────────────────────────────────────────── */
   </style>
 </head>
 <body data-page="compliance">

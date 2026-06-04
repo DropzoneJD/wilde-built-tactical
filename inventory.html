@@ -32,6 +32,58 @@
     .arm-side .chart-box{min-width:0}
     /* let the wide ledger track shrink so the table scrolls internally, not the page */
     .arm-main{min-width:0}
+
+    /* ── Mobile — 760px and below ─────────────────────────────────────── */
+    @media (max-width: 760px) {
+
+      /* Toolbar: stack each control to its own row */
+      .arm-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .arm-toolbar .search {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: 100%;
+      }
+      /* Status seg: fill width and allow internal buttons to wrap */
+      .arm-toolbar .seg {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+      .arm-toolbar .seg button {
+        flex: 1 1 auto;
+      }
+      /* Reset button: full width */
+      .arm-toolbar #btnClear {
+        width: 100%;
+        justify-content: center;
+      }
+
+      /* Category button row: display:flex so it's constrained to container width */
+      .cat-segs {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+      }
+
+      /* Product-detail modal KV grid: 1 col */
+      .modal-grid {
+        grid-template-columns: 1fr;
+      }
+
+      /* Add Product / form grids inside modals: 1 col */
+      .modal .grid-2,
+      .modal-wrap .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      /* Main layout: side column goes full-width below the table */
+      .arm-main,
+      .arm-side {
+        grid-column: 1 / -1 !important;
+      }
+    }
   </style>
 </head>
 <body data-page="inventory">

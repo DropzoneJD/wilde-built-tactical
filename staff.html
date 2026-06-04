@@ -23,6 +23,24 @@
     .cert-name { font-weight: 600; font-size: 13px; min-width: 150px; }
     .spark-wrap { display: inline-block; vertical-align: middle; }
     @media (max-width: 900px) { .hide-sm { display: none !important; } }
+
+    /* ── mobile hardening ─────────────────────────────── */
+    @media (max-width: 760px) {
+      /* KPI row: inline style forces 6 cols — override to 2-up */
+      #staffKpiRow { grid-template-columns: repeat(2, 1fr) !important; }
+
+      /* Mid-section panels: collapse leaderboard / certs / perf to full-width */
+      .col-5, .col-4, .col-3 { grid-column: span 12; }
+
+      /* cert-row: allow name + holders to stack on very narrow screens */
+      .cert-row { flex-wrap: wrap; }
+      .cert-name { min-width: unset; width: 100%; }
+    }
+
+    @media (max-width: 430px) {
+      /* KPI row: 1-up on smallest phones */
+      #staffKpiRow { grid-template-columns: 1fr !important; }
+    }
   </style>
 </head>
 <body data-page="staff">

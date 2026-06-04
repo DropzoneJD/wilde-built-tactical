@@ -9,6 +9,8 @@
   <style>
     /* settings vertical nav */
     .settings-layout { display: grid; grid-template-columns: 210px 1fr; gap: var(--gap); align-items: start; }
+    /* let both columns shrink below content so the mobile nav strip can scroll instead of blowing out */
+    .settings-layout > * { min-width: 0; }
     .settings-nav { position: sticky; top: calc(var(--topbar-h) + 24px); }
     .settings-nav__item {
       display: flex; align-items: center; gap: 10px;
@@ -80,6 +82,80 @@
     /* role matrix */
     .perm-check { display: grid; place-items: center; }
     .perm-check input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--fde); cursor: pointer; }
+
+    /* ── MOBILE ─────────────────────────────────────────────────────────── */
+    @media (max-width: 760px) {
+      /* 1. Collapse the 2-col settings layout to a single column */
+      .settings-layout {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      /* 2. Section nav: sticky sidebar → full-width horizontal scroll strip */
+      .settings-nav {
+        position: static;
+        padding: 8px 0;
+      }
+      #settingsNavItems {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 6px;
+        padding-bottom: 4px;
+        /* hide scrollbar but keep scrollable */
+        scrollbar-width: none;
+      }
+      #settingsNavItems::-webkit-scrollbar { display: none; }
+      .settings-nav__item {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        padding: 8px 12px;
+      }
+      /* active accent bar is left-rail — switch to bottom on horizontal strip */
+      .settings-nav__item.is-active::before {
+        left: 50%;
+        top: auto;
+        bottom: 0;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 3px;
+      }
+
+      /* 3. Form grids → single column */
+      .form-grid-2,
+      .form-grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      /* 4. Location cards grid → single column */
+      #locationCards.grid-2,
+      #locationCards {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* 5. Integration cards grid → single column */
+      #intCards {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* 6. API panel flex rows: wrap so buttons don't overflow */
+      #apiPanel .flex.gap-8 {
+        flex-wrap: wrap;
+      }
+      #apiPanel .input[readonly],
+      #apiPanel .input[type="text"] {
+        min-width: 0;
+      }
+    }
+
+    @media (max-width: 430px) {
+      /* Extra-small phones: tighten nav item padding further */
+      .settings-nav__item {
+        padding: 7px 10px;
+        font-size: 11px;
+      }
+    }
   </style>
 </head>
 <body data-page="settings">

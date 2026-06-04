@@ -21,6 +21,13 @@
     td.rec-hot{color:var(--amber);font-weight:700}
     .conf-cell{display:flex;align-items:center;gap:8px;min-width:120px}
     .conf-cell .meter{flex:1 1 auto}
+
+    @media (max-width: 760px) {
+      /* page-head right control group: go full-width so controls stack cleanly */
+      .page-head > div:last-child { width: 100%; }
+      /* Approve-all button fills its row instead of sitting half-width */
+      #approveAll { flex: 1 1 auto; }
+    }
   </style>
 </head>
 <body data-page="forecast">
