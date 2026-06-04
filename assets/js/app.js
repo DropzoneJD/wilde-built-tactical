@@ -103,9 +103,22 @@
     if (sb) sb.innerHTML = renderSidebar(active);
     if (tb) tb.innerHTML = renderTopbar(active);
 
-    // mobile sidebar
+    // mobile sidebar — toggle the off-canvas drawer with a tap-to-close backdrop
     const mt = document.getElementById('menuToggle');
-    if (mt) mt.addEventListener('click', () => sb.classList.toggle('is-open'));
+    const closeDrawer = () => { sb.classList.remove('is-open'); const v = document.getElementById('sbVeil'); if (v) v.remove(); };
+    if (mt) mt.addEventListener('click', () => {
+      const open = sb.classList.toggle('is-open');
+      let veil = document.getElementById('sbVeil');
+      if (open && !veil) {
+        veil = document.createElement('div'); veil.id = 'sbVeil'; veil.className = 'veil-mobile';
+        veil.addEventListener('click', closeDrawer);
+        document.body.appendChild(veil);
+      } else if (!open && veil) { veil.remove(); }
+    });
+    // tapping a nav link closes the drawer on mobile
+    if (sb) sb.addEventListener('click', e => {
+      if (e.target.closest('.nav__item') && window.matchMedia('(max-width: 940px)').matches) closeDrawer();
+    });
 
     // location switch (cosmetic)
     const ls = document.getElementById('locSwitch');
