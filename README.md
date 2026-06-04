@@ -65,10 +65,15 @@ retail: cinematic hero, category tiles, product grid, slide-out cart, and a refi
 **Two headline features, both genuinely functional:**
 
 - 🗺️ **FFL Finder at checkout** — firearms must ship to a licensed dealer, so the buyer finds one.
-  Enter any US ZIP → **real geocoding** (Zippopotam.us, keyless, with a bundled California fallback
-  for offline) → **haversine distance** to a 36-dealer dataset, sorted nearest-first → an interactive
-  **Leaflet/OpenStreetMap** map with pins → select a dealer and its transfer fee flows into the order
-  total and the confirmation. Try `92101` (San Diego) vs `95814` (Sacramento) — the results re-sort.
+  Locate yourself two ways: enter a ZIP → **real geocoding** (Zippopotam.us, keyless, + bundled
+  fallback), or hit **"Use my location"** (browser Geolocation API). Either way it computes
+  **haversine distance** to **2,300+ real ATF-licensed California dealers** — actual business names,
+  addresses, and FFL license numbers from the official *ATF Listing of Federal Firearms Licensees*,
+  geocoded by premises ZIP (US Census centroids) — sorted nearest-first on an interactive
+  **Leaflet/OpenStreetMap** map. Select a dealer and its (estimated) transfer fee flows into the
+  order total and the pickup confirmation. The real-data file (`store/assets/ffl-data.json`, ~460 KB)
+  is fetched at runtime — built by [`store/tools/build_ffl_data.py`](store/tools/build_ffl_data.py),
+  with a built-in sample list as an offline fallback. Try `92101` vs `95814` — the results re-sort.
 - 🔔 **Back-in-stock alerts** — every out-of-stock product (in-grid, on the product page, and via a
   modal) takes an email and persists the subscription, mirroring WBT's existing OOS pattern.
 

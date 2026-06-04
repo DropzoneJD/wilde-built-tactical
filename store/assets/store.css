@@ -219,6 +219,7 @@ h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-transform:uppercase;lette
 #fflMap{height:100%;min-height:380px;background:#0e1210;}
 .ffl__selected{margin-top:14px;padding:13px 15px;border:1px solid var(--fde);border-radius:var(--r);background:rgba(194,161,123,.08);}
 .ffl__selected .eyebrow{margin-bottom:6px;}
+.ffl__src{font-size:10px;color:var(--faint);font-family:var(--f-mono);margin-top:12px;padding-top:10px;border-top:1px solid var(--line);line-height:1.4;}
 .leaflet-container{background:#0e1210 !important;font-family:var(--f-body) !important;}
 .leaflet-popup-content-wrapper{background:var(--panel-3) !important;color:var(--text) !important;border-radius:var(--r) !important;}
 .leaflet-popup-tip{background:var(--panel-3) !important;}
