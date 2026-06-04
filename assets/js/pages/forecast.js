@@ -330,7 +330,7 @@
     `<div class="alert alert--${c}"><i data-lucide="${ic}"></i><div>${t}</div></div>`).join('') +
     `<div class="flex gap-8">
        <button class="btn btn--ghost btn--sm" onclick="WBT.ui.toast('Watchlist synced to Armory (demo)','radar')"><i data-lucide="radar"></i> Sync watchlist</button>
-       <button class="btn btn--ghost btn--sm" onclick="WBT.ui.toast('Reorder digest emailed to Ray Calhoun (demo)','mail')"><i data-lucide="mail"></i> Email digest</button>
+       <button class="btn btn--ghost btn--sm" onclick="WBT.ui.toast('Reorder digest emailed to Bryan Howes (demo)','mail')"><i data-lucide="mail"></i> Email digest</button>
      </div>`;
 
   // ----- clock --------------------------------------------------------------
