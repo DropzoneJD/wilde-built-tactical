@@ -1,16 +1,18 @@
 /* ============================================================================
-   WBT Command Center — portal-grid.js
-   Makes the owner portal's panel grids DRAG-AND-DROP + RESIZABLE with smooth,
-   auto-reflowing animations, on top of the existing markup. Built on GridStack.
+   WBT Command Center — portal-grid.js  (v3)
+   Turns the ENTIRE owner portal into a drag-and-drop, resizable dashboard.
 
-   - Transforms each main `.grid.grid-12` panel grid into a GridStack grid at runtime
-     (KPI rows / toolbars are left untouched).
-   - Drag a panel by its header to rearrange; drag the right/corner handle to resize.
-   - Heights auto-fit content (sizeToContent); widths snap to the 12-col system.
-   - Layout persists per page in localStorage; a topbar control resets it.
-   - Charts inside re-fit when their panel resizes.
-   - Collapses to a single column and locks on mobile.
-   Defensive: if GridStack is missing or a transform fails, the page is left as-is.
+   How it works:
+   - Walks every direct child of .content on each page
+   - Groups consecutive "draggable" children (panels + grid containers) into
+     one GridStack zone, separated by static elements (KPI rows, tab sections,
+     toolbars, page-head)
+   - Grid containers are exploded — each panel inside becomes its own moveable
+     item. col-N.grid stacked-column wrappers become one opaque draggable block.
+   - Standalone panels that were never inside any grid are now included.
+   - Layout persists per page in localStorage; topbar reset button.
+   - Charts refit on drop/resize. Mobile locks to 1-col (no accidental drag).
+   Defensive: if GridStack fails to load or a transform errors, page is left as-is.
    ============================================================================ */
 (function () {
   if (document.readyState === 'complete') init();
@@ -20,45 +22,71 @@
     if (!window.GridStack) return;
     const PAGE = document.body.dataset.page || 'page';
     const KEY  = 'wbt_layout_' + PAGE;
-    const SKIP = new Set(['kpiRow', 'kpiStrip', 'settingsKpiRow']);
     const MOBILE = () => window.matchMedia('(max-width: 940px)').matches;
+
+    // IDs that are KPI metric strips — never draggable
+    const SKIP_IDS = new Set([
+      'kpiRow', 'kpiStrip', 'settingsKpiRow',
+      'mktKpiRow', 'staffKpiRow', 'ordersKpiRow',
+    ]);
 
     // -------------------------------------------------- injected styles
     const css = `
+      /* ── grid wrapper ─────────────────────────────────────────────────── */
       .wbt-gs.grid-stack { margin: 0 -8px; }
 
-      /* item transition: 140ms, snappy cubic — overrides GridStack's 300ms */
+      /* ── item transitions: 140ms snappy — overrides GridStack's 300ms ── */
       .wbt-gs.grid-stack > .grid-stack-item {
         transition-duration: 0.14s !important;
         transition-timing-function: cubic-bezier(0.25, 0, 0.1, 1) !important;
         will-change: left, top, width, height;
       }
-      /* dragged + resizing: no transition — tracks cursor at native speed */
+      /* Dragged / resizing: no interpolation — tracks cursor at native speed */
       .wbt-gs.grid-stack > .grid-stack-item.ui-draggable-dragging,
       .wbt-gs.grid-stack > .grid-stack-item.ui-resizable-resizing {
         transition: none !important;
         z-index: 60;
       }
 
+      /* ── content div: use relative flow so sizeToContent measures ─────── */
+      /* correctly (overrides GridStack's position:absolute; inset:0) */
       .wbt-gs .grid-stack-item-content {
-        inset: 0; background: transparent; border: 0;
-        overflow: visible; display: block;
+        position: relative !important;
+        height: auto !important;
+        inset: auto !important;
+        overflow: visible;
+        background: transparent;
+        border: 0;
+        display: block;
       }
       .wbt-gs .grid-stack-item-content > .panel,
-      .wbt-gs .grid-stack-item-content > .grid { height: 100%; margin: 0; }
+      .wbt-gs .grid-stack-item-content > [class*="col-"] {
+        margin: 0;
+      }
 
-      /* drag grip icon */
+      /* ── drag grip icon ───────────────────────────────────────────────── */
       .wbt-gs .panel__head { cursor: grab; user-select: none; }
       .wbt-gs .panel__head:active { cursor: grabbing; }
       .wbt-grip {
         display: inline-flex; align-items: center; margin-right: 4px;
         color: var(--faint); cursor: grab; opacity: .45;
-        transition: opacity .12s, color .12s;
+        transition: opacity .12s, color .12s; flex-shrink: 0;
       }
       .wbt-gs .panel:hover .wbt-grip { opacity: .9; color: var(--fde); }
       .wbt-grip svg { width: 14px; height: 14px; }
+      /* drag bar for col-N wrapper items that have no panel header */
+      .wbt-drag-bar {
+        display: flex; align-items: center; justify-content: center; gap: 4px;
+        height: 22px; cursor: grab; user-select: none;
+        background: var(--panel-solid); border: 1px solid var(--line);
+        border-radius: var(--r-lg) var(--r-lg) 0 0;
+        color: var(--faint); opacity: .55; transition: opacity .12s;
+        margin-bottom: 0;
+      }
+      .wbt-drag-bar:hover { opacity: 1; color: var(--fde); }
+      .wbt-drag-bar svg { width: 13px; height: 13px; }
 
-      /* lifted card while dragging */
+      /* ── lifted card while dragging ───────────────────────────────────── */
       .grid-stack-item.ui-draggable-dragging .panel {
         outline: 1px solid var(--fde);
         box-shadow: 0 28px 64px -14px rgba(0,0,0,.88);
@@ -66,7 +94,7 @@
         transition: transform .08s, box-shadow .08s !important;
       }
 
-      /* drop-zone placeholder */
+      /* ── drop-zone placeholder ────────────────────────────────────────── */
       .wbt-gs > .grid-stack-placeholder > .placeholder-content {
         background: rgba(194,161,123,.06);
         border: 1px dashed rgba(194,161,123,.5);
@@ -79,7 +107,7 @@
         to   { opacity: 1; transform: scaleY(1); }
       }
 
-      /* resize handles */
+      /* ── resize handles ───────────────────────────────────────────────── */
       .wbt-gs .ui-resizable-handle { z-index: 40; }
       .wbt-gs .ui-resizable-e  { width: 8px; right: 6px; cursor: ew-resize; }
       .wbt-gs .ui-resizable-se {
@@ -94,7 +122,7 @@
       }
       .wbt-gs .grid-stack-item:hover .ui-resizable-se::after { opacity: .85; }
 
-      /* layout-reset: kill all transitions during reload */
+      /* layout-reset: kill transitions during reload */
       .wbt-resetting * { transition: none !important; }
 
       @media (max-width: 940px) { .wbt-grip { display: none; } }
@@ -105,78 +133,97 @@
 
     // -------------------------------------------------- helpers
     const colSpan = el => {
-      const m = (el.className || '').match(/\bcol-(\d+)\b/);
-      return m ? Math.min(12, +m[1]) : 12;
+      const m = (el && el.className || '').match(/\bcol-(\d+)\b/);
+      return m ? Math.min(12, +m[1]) : 0;
     };
 
-    function isPanelGrid(g) {
-      if (SKIP.has(g.id)) return false;
-      if (!g.classList.contains('grid')) return false;
-      if (!g.offsetParent || g.offsetHeight === 0) return false;
-      const kids = [...g.children].filter(k => k.nodeType === 1);
-      if (kids.length < 2) return false;
-      const ok = kids.every(k =>
-        k.classList.contains('panel') ||
-        /\bcol-\d+\b/.test(k.className) ||
-        k.querySelector('.panel')
-      );
-      return ok && kids.some(k => k.classList.contains('panel') || k.querySelector('.panel'));
+    function isStatic(el) {
+      if (!el || el.nodeType !== 1) return true;
+      if (['STYLE','SCRIPT','LINK'].includes(el.tagName)) return true;
+      if (SKIP_IDS.has(el.id)) return true;
+      // Page structure
+      if (el.classList.contains('page-head')) return true;
+      if (el.classList.contains('settings-layout')) return true;
+      // Tab sections — keep as opaque blocks
+      if (el.tagName === 'SECTION') return true;
+      // Flex toolbars / tab navs (no panel children)
+      if ((el.classList.contains('flex') || el.classList.contains('meta-row')) &&
+          !el.querySelector('.panel')) return true;
+      // Explicit skip classes
+      const skipCls = ['tab-nav','tab-bar','toolbar','filter-bar','tac-toolbar','breadcrumb'];
+      if (skipCls.some(c => el.classList.contains(c))) return true;
+      return false;
     }
 
-    function transform(grid, gi) {
-      const kids = [...grid.children].filter(k => k.nodeType === 1);
-      grid.classList.add('wbt-gs', 'grid-stack');
-      grid.classList.remove('grid-12', 'grid-2', 'grid-3', 'grid-4');
-      grid.style.gridTemplateColumns = '';
-      kids.forEach((child, i) => {
-        const w = colSpan(child);
-        const item = document.createElement('div');
-        item.className = 'grid-stack-item';
-        item.setAttribute('gs-w', w);
-        item.setAttribute('gs-min-w', Math.min(3, w));
-        item.setAttribute('gs-id', PAGE + '-' + gi + '-' + i);
-        const content = document.createElement('div');
-        content.className = 'grid-stack-item-content';
-        grid.insertBefore(item, child);
-        content.appendChild(child);
-        item.appendChild(content);
-        const head = content.querySelector('.panel__head');
-        if (head && !head.querySelector('.wbt-grip')) {
+    function isDraggableCandidate(el) {
+      if (isStatic(el)) return false;
+      if (el.classList.contains('panel')) return true;
+      if (el.classList.contains('grid') && el.querySelector('.panel')) return true;
+      if (colSpan(el) > 0 && el.querySelector('.panel')) return true;
+      return false;
+    }
+
+    // Returns GridStack item descriptors for a source element.
+    // Pure .grid containers (no col-N class, e.g. grid-12) are exploded — each
+    // direct child becomes its own GridStack item.
+    // col-N wrappers (with or without .grid class) are kept as opaque items so
+    // their internal stacking / layout is preserved.
+    function getItems(source) {
+      if (source.classList.contains('panel')) {
+        return [{ el: source, w: colSpan(source) || 12 }];
+      }
+      const w = colSpan(source);
+      if (source.classList.contains('grid') && !w) {
+        // Pure grid container — explode direct children
+        return [...source.children]
+          .filter(k => k.nodeType === 1)
+          .map(k => ({ el: k, w: colSpan(k) || 12 }));
+      }
+      // col-N wrapper (e.g. col-4.grid, col-8): keep as one opaque item
+      if (w > 0) return [{ el: source, w }];
+      return [];
+    }
+
+    function addGrip(el) {
+      const head = el.querySelector('.panel__head');
+      if (head) {
+        if (!head.querySelector('.wbt-grip')) {
           const grip = document.createElement('span');
           grip.className = 'wbt-grip'; grip.title = 'Drag to rearrange';
           grip.innerHTML = '<i data-lucide="grip-vertical"></i>';
           head.insertBefore(grip, head.firstChild);
-        } else if (!head) {
-          item.classList.add('wbt-nohead');
         }
-      });
-      grid.classList.remove('grid');
-      return grid;
+      } else if (!el.querySelector('.wbt-drag-bar')) {
+        // col-N wrapper with no panel__head — inject a thin drag handle bar
+        const bar = document.createElement('div');
+        bar.className = 'wbt-drag-bar wbt-grip';
+        bar.title = 'Drag to rearrange';
+        bar.innerHTML = '<i data-lucide="grip-vertical"></i>';
+        el.insertBefore(bar, el.firstChild);
+      }
     }
 
     // -------------------------------------------------- chart refit
-    function refitCharts(el) {
+    function refitCharts(container) {
       if (!window.Chart) return;
-      el.querySelectorAll('canvas').forEach(c => {
+      (container || document).querySelectorAll('canvas').forEach(c => {
         const ch = window.Chart.getChart(c);
         if (ch) ch.resize();
       });
     }
-
-    // RAF-throttled refit (called during live resize — at most 1x per frame)
-    let _rafId = null;
+    let _rafId;
     function refitChartRAF(el) {
-      if (_rafId) cancelAnimationFrame(_rafId);
+      cancelAnimationFrame(_rafId);
       _rafId = requestAnimationFrame(() => { refitCharts(el); _rafId = null; });
     }
 
     // -------------------------------------------------- debounced save
-    let _saveTimer = null;
+    let _saveTimer;
     function saveLayout() {
       clearTimeout(_saveTimer);
       _saveTimer = setTimeout(() => {
         try {
-          const data = grids.map(g => g.save(false));
+          const data = grids.map(({ grid }) => grid.save(false));
           localStorage.setItem(KEY, JSON.stringify(data));
         } catch (e) {}
       }, 250);
@@ -184,71 +231,124 @@
 
     // -------------------------------------------------- build grids
     const grids = [];
-    const allGrids = [...document.querySelectorAll('.content .grid')].filter(isPanelGrid);
-    const targets  = allGrids.filter(g => !allGrids.some(o => o !== g && o.contains(g)));
+    let gi = 0;
 
-    targets.forEach((gridEl, gi) => {
-      let g;
-      try { g = transform(gridEl, gi); } catch (e) { return; }
+    const content = document.querySelector('.content');
+    if (!content) return;
 
-      const grid = GridStack.init({
-        column:   12,
-        margin:   '8px',
-        cellHeight: 'auto',
-        sizeToContent: true,
-        float:    false,
-        animate:  true,
-        handle:   '.wbt-grip, .wbt-nohead > .grid-stack-item-content',
-        draggable: { cancel: 'a, button, input, select, textarea, .btn, .seg, .switch, .tac-table' },
-        resizable: { handles: 'e, se' },
-        columnOpts: { breakpoints: [{ w: 940, c: 1 }], layout: 'list' },
-        disableOneColumnMode: false,
-      }, g);
+    let runSources = [];  // direct .content children that form this run
+    let runItems   = [];  // { el, w } to place in the GridStack
 
-      grids.push(grid);
+    function flushRun() {
+      if (!runItems.length) { runSources = []; return; }
 
-      // restore saved layout
+      const thisGi = gi++;
+
+      // Insert GridStack wrapper before the first source element
+      const wrapper = document.createElement('div');
+      wrapper.className = 'wbt-gs grid-stack';
+      content.insertBefore(wrapper, runSources[0]);
+
+      // Wrap each item in a gs-item
+      runItems.forEach(({ el, w }, i) => {
+        // Strip margin-bottom/top utilities — GridStack controls inter-item spacing
+        el.className = el.className.replace(/\bm[bt]-\d+\b/g, '').replace(/\s+/g, ' ').trim();
+        const item = document.createElement('div');
+        item.className = 'grid-stack-item';
+        item.setAttribute('gs-w', w);
+        item.setAttribute('gs-min-w', Math.min(3, w));
+        item.setAttribute('gs-id', `${PAGE}-${thisGi}-${i}`);
+        const inner = document.createElement('div');
+        inner.className = 'grid-stack-item-content';
+        inner.appendChild(el);   // moves el from DOM into inner div
+        item.appendChild(inner);
+        wrapper.appendChild(item);
+        addGrip(el);
+      });
+
+      // Remove grid wrapper sources (now empty after child extraction).
+      // Standalone panels were already moved out of content via appendChild above.
+      runSources.forEach(s => {
+        if (s.classList.contains('grid') && s.parentNode === content) {
+          content.removeChild(s);
+        }
+      });
+
+      let grid;
+      try {
+        grid = GridStack.init({
+          column:   12,
+          margin:   '8px',
+          cellHeight: 'auto',
+          sizeToContent: true,
+          float:    false,
+          animate:  true,
+          handle:   '.wbt-grip',
+          draggable: { cancel: 'a, button, input, select, textarea, .btn, .seg, .switch, .tac-table' },
+          resizable: { handles: 'e, se' },
+          columnOpts: { breakpoints: [{ w: 940, c: 1 }], layout: 'list' },
+        }, wrapper);
+      } catch (e) {
+        runSources = []; runItems = [];
+        return;
+      }
+
+      grids.push({ grid, el: wrapper, gi: thisGi });
+
+      // Restore saved layout
       try {
         const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-        if (saved && saved[gi]) grid.load(saved[gi], false);
+        if (saved && saved[thisGi]) grid.load(saved[thisGi], false);
       } catch (e) {}
 
-      // ── event wiring ────────────────────────────────────────────────────────
-      // change fires on every positional recalculation during drag — save only,
-      // no chart redraws here (that's what caused the chart-redraw lag).
+      // Event handlers
       grid.on('change', saveLayout);
-
-      // live resize: RAF-throttled chart refit (max 60fps, not every GridStack tick)
       grid.on('resize', (ev, el) => refitChartRAF(el));
-
-      // after drop/resize: refit all charts in this grid (neighboring panels may
-      // have also moved), save, and notify any other layout-aware components.
-      // Fires once on interaction end — NOT during drag.
       grid.on('dragstop resizestop', () => {
-        refitCharts(g);
+        refitCharts(wrapper);
         saveLayout();
         window.dispatchEvent(new Event('resize'));
       });
-    });
+
+      runSources = [];
+      runItems   = [];
+    }
+
+    // Walk .content direct children
+    const contentKids = [...content.children].filter(k => k.nodeType === 1);
+    for (const el of contentKids) {
+      if (isDraggableCandidate(el)) {
+        runItems.push(...getItems(el));
+        runSources.push(el);
+      } else {
+        flushRun();
+      }
+    }
+    flushRun();
 
     if (!grids.length) return;
 
-    function reset() {
-      localStorage.removeItem(KEY);
-      document.documentElement.classList.add('wbt-resetting');
-      setTimeout(() => location.reload(), 60);
+    // -------------------------------------------------- mobile lock
+    function syncMode() {
+      const m = MOBILE();
+      grids.forEach(({ grid }) => grid.setStatic(m));
     }
-
-    // mobile: lock to 1-col
-    function syncMode() { const m = MOBILE(); grids.forEach(g => g.setStatic(m)); }
     syncMode();
     window.addEventListener('resize', (() => {
       let t;
       return () => { clearTimeout(t); t = setTimeout(syncMode, 200); };
     })());
 
+    // Re-render lucide icons (grip icons just added) + refit charts
     if (window.lucide) window.lucide.createIcons();
-    setTimeout(() => grids.forEach(g => g.el && refitCharts(g.el)), 300);
+    setTimeout(() => grids.forEach(({ el }) => refitCharts(el)), 300);
+
+    // -------------------------------------------------- reset
+    function reset() {
+      localStorage.removeItem(KEY);
+      document.documentElement.classList.add('wbt-resetting');
+      setTimeout(() => location.reload(), 60);
+    }
 
     // -------------------------------------------------- topbar control
     function injectControl() {
@@ -260,7 +360,7 @@
       wrap.style.cssText = 'order:5';
       wrap.innerHTML = `
         <span class="tag tag--fde tag--ghost hide-sm"
-              title="Drag panels by the grip in each header; drag the bottom-right corner to resize">
+              title="Drag panels by the ⋮⋮ grip · resize from corner · auto-saves">
           <i data-lucide="move" style="width:13px"></i> Custom layout</span>
         <button class="btn btn--icon btn--ghost" id="wbtLayoutReset" title="Reset layout">
           <i data-lucide="rotate-ccw"></i></button>`;
@@ -270,10 +370,10 @@
     }
     injectControl();
 
-    // one-time hint toast
+    // One-time hint
     try {
       if (!localStorage.getItem('wbt_layout_hinted') && window.WBT && WBT.ui && !MOBILE()) {
-        WBT.ui.toast('Tip: drag panels by the ⋮⋮ grip to rearrange — resize from the corner. Layout saves automatically.', 'move');
+        WBT.ui.toast('Drag any panel by the ⋮⋮ grip to rearrange — resize from the corner. Layout saves automatically.', 'move');
         localStorage.setItem('wbt_layout_hinted', '1');
       }
     } catch (e) {}
