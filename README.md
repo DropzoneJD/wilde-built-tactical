@@ -48,6 +48,12 @@ re-skins the whole UI.
 | ⛊ | **Staff & Range** | Team roster, on-shift status, sales leaderboard, weekly schedule, certifications tracker (DROS cert, FFL, armorer, range safety). |
 | ⚙ | **Settings** | Store + FFL config, notifications, role matrix, integrations, and a **live accent-color theming** showcase. |
 
+> **🧩 Customizable layout** — every dashboard page is **drag-and-drop**. Grab a panel by the ⋮⋮ grip
+> in its header to rearrange, drag the bottom-right corner to resize, and the grid **auto-reflows with
+> smooth animations**. Charts and tables re-fit to their new size; your layout **saves per page**
+> (localStorage) and can be reset from the topbar. Built on GridStack; collapses to a single locked
+> column on mobile.
+
 ## 🛒 Customer Storefront (`/store/`)
 
 A full **customer-facing e-commerce site** that sells the *same products* the Armory manages
